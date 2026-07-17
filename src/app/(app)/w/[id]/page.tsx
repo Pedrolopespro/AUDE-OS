@@ -106,18 +106,18 @@ export default async function WorkspacePage({
     <div>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wide text-[--color-aude-black]/40">
+          <p className="text-xs uppercase tracking-wide text-aude-black/40">
             Workspace
           </p>
           <h1 className="font-display text-2xl font-semibold">{cliente?.nome}</h1>
-          <p className="mt-1 text-sm text-[--color-aude-black]/60">
+          <p className="mt-1 text-sm text-aude-black/60">
             {cliente?.segmento ?? "—"} {cliente?.site ? `· ${cliente.site}` : ""}
           </p>
         </div>
         {ehStaff && (
           <form action={atualizarMetricas}>
             <input type="hidden" name="workspace_id" value={id} />
-            <button className="rounded-md border border-[--color-aude-stone] px-3 py-1.5 text-xs font-medium transition hover:border-[--color-aude-petrol]">
+            <button className="rounded-md border border-aude-stone px-3 py-1.5 text-xs font-medium transition hover:border-aude-petrol">
               ↻ Atualizar métricas
             </button>
           </form>
@@ -132,11 +132,11 @@ export default async function WorkspacePage({
 
       {/* Card de resumo real — item 8 do MVP */}
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-[--color-aude-black]/50">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-aude-black/50">
           Últimos 7 dias
         </h2>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-lg bg-[--color-aude-navy] p-6 text-[--color-aude-white]">
+          <div className="rounded-lg bg-aude-navy p-6 text-aude-white">
             <p className="text-xs uppercase tracking-wide text-white/50">Sessões (GA4)</p>
             <p className="mt-2 font-display text-4xl font-semibold">
               {ga4 ? Number(ga4.valor).toLocaleString("pt-BR") : "—"}
@@ -147,7 +147,7 @@ export default async function WorkspacePage({
                 : "Conecte o GA4 para ver dados reais"}
             </p>
           </div>
-          <div className="rounded-lg bg-[--color-aude-petrol] p-6 text-[--color-aude-white]">
+          <div className="rounded-lg bg-aude-petrol p-6 text-aude-white">
             <p className="text-xs uppercase tracking-wide text-white/50">
               Cliques na busca (Search Console)
             </p>
@@ -165,10 +165,10 @@ export default async function WorkspacePage({
 
       {/* Status das conexões — itens 4–7 do MVP */}
       <section className="mt-10">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-[--color-aude-black]/50">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-aude-black/50">
           Conexões
         </h2>
-        <div className="mt-3 divide-y divide-[--color-aude-stone] rounded-lg border border-[--color-aude-stone] bg-white">
+        <div className="mt-3 divide-y divide-aude-stone rounded-lg border border-aude-stone bg-white">
           {provedoresMvp.map((provedor) => {
             const conexao = conexaoPor(provedor);
             const st = statusUi[conexao?.status ?? "nao_conectado"];
@@ -176,7 +176,7 @@ export default async function WorkspacePage({
               <div key={provedor} className="flex items-center justify-between px-5 py-4">
                 <div>
                   <p className="text-sm font-medium">{provedorLabel[provedor]}</p>
-                  <p className="mt-0.5 text-xs text-[--color-aude-black]/50">
+                  <p className="mt-0.5 text-xs text-aude-black/50">
                     {conexao?.propriedade_nome ?? conexao?.propriedade ?? "Nenhuma propriedade selecionada"}
                   </p>
                 </div>
@@ -187,7 +187,7 @@ export default async function WorkspacePage({
                   {ehStaff && (
                     <a
                       href={`/api/google/connect?workspace=${id}&provedor=${provedor}`}
-                      className="rounded-md border border-[--color-aude-stone] px-3 py-1 text-xs font-medium transition hover:border-[--color-aude-petrol]"
+                      className="rounded-md border border-aude-stone px-3 py-1 text-xs font-medium transition hover:border-aude-petrol"
                     >
                       {conexao?.status === "conectado" ? "Reconectar" : "Conectar"}
                     </a>
@@ -201,7 +201,7 @@ export default async function WorkspacePage({
           <div className="flex items-center justify-between px-5 py-4 opacity-50">
             <div>
               <p className="text-sm font-medium">Metricool (Instagram, LinkedIn, Meta Ads, GMB)</p>
-              <p className="mt-0.5 text-xs text-[--color-aude-black]/50">Fase 2</p>
+              <p className="mt-0.5 text-xs text-aude-black/50">Fase 2</p>
             </div>
             <span className="rounded-full bg-gray-200 px-2.5 py-0.5 text-[11px] font-medium text-gray-600">
               Em breve
@@ -212,14 +212,14 @@ export default async function WorkspacePage({
 
       {/* Abas futuras do Workspace — item 9 do MVP (estrutura criada, vazia) */}
       <section className="mt-10">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-[--color-aude-black]/50">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-aude-black/50">
           Estrutura do Workspace
         </h2>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {["Site", "Conhecimento", "Projetos", "Relatórios"].map((aba) => (
             <div
               key={aba}
-              className="rounded-lg border border-dashed border-[--color-aude-stone] p-4 text-center text-xs text-[--color-aude-black]/40"
+              className="rounded-lg border border-dashed border-aude-stone p-4 text-center text-xs text-aude-black/40"
             >
               {aba}
               <br />
@@ -230,7 +230,7 @@ export default async function WorkspacePage({
       </section>
 
       {ehStaff && (
-        <p className="mt-10 text-xs text-[--color-aude-black]/40">
+        <p className="mt-10 text-xs text-aude-black/40">
           <Link href="/" className="underline">
             ← Voltar para clientes
           </Link>

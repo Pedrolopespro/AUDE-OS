@@ -33,7 +33,7 @@ export default async function SelecionarPropriedadePage({
       <h1 className="font-display text-2xl font-semibold">
         Selecionar propriedade — {provedorLabel[conexao.provedor] ?? conexao.provedor}
       </h1>
-      <p className="mt-1 text-sm text-[--color-aude-black]/60">
+      <p className="mt-1 text-sm text-aude-black/60">
         A conta Google conectada tem acesso a estas propriedades. Escolha a do cliente.
       </p>
 
@@ -43,7 +43,7 @@ export default async function SelecionarPropriedadePage({
             <input type="hidden" name="conexao_id" value={conexaoId} />
             <input type="hidden" name="propriedade" value={p.id} />
             <input type="hidden" name="propriedade_nome" value={p.nome} />
-            <button className="w-full rounded-lg border border-[--color-aude-stone] bg-white px-5 py-3 text-left text-sm transition hover:border-[--color-aude-petrol] hover:shadow-sm">
+            <button className="w-full rounded-lg border border-aude-stone bg-white px-5 py-3 text-left text-sm transition hover:border-aude-petrol hover:shadow-sm">
               {p.nome}
             </button>
           </form>

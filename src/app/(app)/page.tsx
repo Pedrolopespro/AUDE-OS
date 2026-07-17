@@ -32,7 +32,7 @@ export default async function Dashboard() {
       .single();
     if (vinculo) redirect(`/w/${vinculo.workspace_id}`);
     return (
-      <p className="text-sm text-[--color-aude-black]/60">
+      <p className="text-sm text-aude-black/60">
         Seu Workspace ainda não foi vinculado. Fale com seu Guardião AUDE.
       </p>
     );
@@ -48,13 +48,13 @@ export default async function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-semibold">Clientes</h1>
-          <p className="mt-1 text-sm text-[--color-aude-black]/60">
+          <p className="mt-1 text-sm text-aude-black/60">
             Workspaces sob a guarda da AUDE
           </p>
         </div>
         <Link
           href="/clientes/novo"
-          className="rounded-md bg-[--color-aude-black] px-4 py-2 text-sm font-medium text-[--color-aude-white] transition hover:bg-[--color-aude-navy]"
+          className="rounded-md bg-aude-black px-4 py-2 text-sm font-medium text-aude-white transition hover:bg-aude-navy"
         >
           + Novo cliente
         </Link>
@@ -69,7 +69,7 @@ export default async function Dashboard() {
             <Link
               key={cliente.id}
               href={ws ? `/w/${ws.id}` : "#"}
-              className="rounded-lg border border-[--color-aude-stone] bg-white p-5 transition hover:border-[--color-aude-petrol] hover:shadow-sm"
+              className="rounded-lg border border-aude-stone bg-white p-5 transition hover:border-aude-petrol hover:shadow-sm"
             >
               <div className="flex items-start justify-between">
                 <h2 className="font-medium">{cliente.nome}</h2>
@@ -79,11 +79,11 @@ export default async function Dashboard() {
                   {cliente.status}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-[--color-aude-black]/50">
+              <p className="mt-1 text-sm text-aude-black/50">
                 {cliente.segmento ?? "—"} {cliente.site ? `· ${cliente.site}` : ""}
               </p>
               {cliente.convite_email && (
-                <p className="mt-3 text-xs text-[--color-aude-black]/40">
+                <p className="mt-3 text-xs text-aude-black/40">
                   Convite: {cliente.convite_email} ({cliente.convite_status})
                 </p>
               )}
@@ -92,7 +92,7 @@ export default async function Dashboard() {
         })}
 
         {(clientes ?? []).length === 0 && (
-          <div className="col-span-full rounded-lg border border-dashed border-[--color-aude-stone] p-10 text-center text-sm text-[--color-aude-black]/50">
+          <div className="col-span-full rounded-lg border border-dashed border-aude-stone p-10 text-center text-sm text-aude-black/50">
             Nenhum cliente ainda. Comece cadastrando o primeiro.
           </div>
         )}
