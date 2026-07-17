@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --color-aude-black: #0b0b0c;
+  --color-aude-white: #f7f7f5;
+  --color-aude-bordeaux: #5a1e2d;
+  --color-aude-navy: #16263b;
+  --color-aude-petrol: #0f4b4a;
+  --color-aude-stone: #e4e4e2;
+
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  background: var(--color-aude-white);
+  color: var(--color-aude-black);
+}
+
+.font-display {
+  font-family: "Helvetica Neue", var(--font-inter), Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
