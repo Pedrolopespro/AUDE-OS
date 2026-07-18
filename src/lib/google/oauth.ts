@@ -2,6 +2,8 @@ import { google } from "googleapis";
 import { createHmac, timingSafeEqual } from "crypto";
 
 export const GOOGLE_SCOPES: Record<string, string[]> = {
+  // "login" não é uma Conexao — é o fluxo de entrada no app via signInWithIdToken
+  login: ["openid", "email", "profile"],
   google_search_console: ["https://www.googleapis.com/auth/webmasters.readonly"],
   google_ga4: ["https://www.googleapis.com/auth/analytics.readonly"],
 };
@@ -43,6 +45,13 @@ export function decodeState(raw: string): OAuthState | null {
 
 export function getAuthUrl(state: OAuthState): string {
   const client = getOAuthClient();
+  if (state.provedor === "login") {
+    return client.generateAuthUrl({
+      prompt: "select_account",
+      scope: GOOGLE_SCOPES.login,
+      state: encodeState(state),
+    });
+  }
   return client.generateAuthUrl({
     access_type: "offline",
     // sem prompt=consent o Google só devolve refresh_token no primeiro consent;

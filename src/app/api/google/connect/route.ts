@@ -6,9 +6,14 @@ import { getAuthUrl, GOOGLE_SCOPES } from "@/lib/google/oauth";
 // Separado do login: o consent de dados só é pedido a quem conecta, não a todo usuário.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const workspaceId = searchParams.get("workspace");
   const provedor = searchParams.get("provedor");
 
+  // login: fluxo público de entrada — sem sessão nem workspace
+  if (provedor === "login") {
+    return NextResponse.redirect(getAuthUrl({ workspaceId: "", provedor: "login" }));
+  }
+
+  const workspaceId = searchParams.get("workspace");
   if (!workspaceId || !provedor || !GOOGLE_SCOPES[provedor]) {
     return NextResponse.json({ erro: "Parâmetros inválidos" }, { status: 400 });
   }

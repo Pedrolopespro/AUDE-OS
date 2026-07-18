@@ -19,6 +19,34 @@ export async function GET(request: Request) {
   if (!state) {
     return NextResponse.redirect(new URL("/?erro=state_invalido", request.url));
   }
+
+  // ===== LOGIN (signInWithIdToken — não depende de client secret no Supabase) =====
+  if (state.provedor === "login") {
+    if (oauthError || !code) {
+      return NextResponse.redirect(new URL("/login?erro=auth", request.url));
+    }
+    try {
+      const tokens = await exchangeCode(code);
+      if (!tokens.id_token) {
+        return NextResponse.redirect(new URL("/login?erro=auth", request.url));
+      }
+      const supabase = await createClient();
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: tokens.id_token,
+      });
+      if (error) {
+        console.error("signInWithIdToken:", error.message);
+        return NextResponse.redirect(new URL("/login?erro=auth", request.url));
+      }
+      return NextResponse.redirect(new URL("/", request.url));
+    } catch (err) {
+      console.error("login callback:", err);
+      return NextResponse.redirect(new URL("/login?erro=auth", request.url));
+    }
+  }
+
+  // ===== CONEXÃO (Search Console / GA4) =====
   const voltarPara = `/w/${state.workspaceId}`;
 
   if (oauthError || !code) {

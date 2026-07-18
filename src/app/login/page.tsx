@@ -2,22 +2,16 @@
 
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 function LoginConteudo() {
   const [carregando, setCarregando] = useState(false);
   const searchParams = useSearchParams();
   const erro = searchParams.get("erro");
 
-  async function entrarComGoogle() {
+  function entrarComGoogle() {
     setCarregando(true);
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    // fluxo próprio de OAuth no servidor + signInWithIdToken no callback
+    window.location.href = "/api/google/connect?provedor=login";
   }
 
   return (

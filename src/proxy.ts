@@ -30,7 +30,11 @@ export default async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const publica = pathname.startsWith("/login") || pathname.startsWith("/auth");
+  // /api/google: fluxo de login é público; rotas de conexão validam papel internamente
+  const publica =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/api/google");
 
   if (!user && !publica) {
     const url = request.nextUrl.clone();
