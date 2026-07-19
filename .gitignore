@@ -42,3 +42,9 @@ next-env.d.ts
 
 # manter o template de env versionado
 !.env.example
+
+# swarm/tooling state
+.claude-flow/
+.swarm/
+.claude/.proven-config-version
+.claude/proven-config.json
