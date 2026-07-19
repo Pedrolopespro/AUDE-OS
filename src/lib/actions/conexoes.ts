@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
 import { getAdapter, type Provedor } from "@/lib/adapters";
 import { atualizarSnapshot } from "@/lib/services/snapshot";
+import { recalcularStatusCliente } from "@/lib/services/status";
 
 async function exigirStaff() {
   const supabase = await createClient();
@@ -88,5 +89,6 @@ export async function atualizarMetricas(formData: FormData): Promise<void> {
   for (const c of conexoes ?? []) {
     await atualizarSnapshot(c.id);
   }
+  await recalcularStatusCliente(workspaceId);
   revalidatePath(`/w/${workspaceId}`);
 }

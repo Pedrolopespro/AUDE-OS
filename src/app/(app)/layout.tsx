@@ -28,9 +28,21 @@ export default async function AppLayout({
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-aude-stone bg-aude-black text-aude-white">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
-          <Link href="/" className="font-display text-lg font-semibold">
-            AUDE<span className="text-[#a34a5e]">.</span>OS
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link href="/" className="font-display text-lg font-semibold">
+              AUDE<span className="text-[#a34a5e]">.</span>OS
+            </Link>
+            {["administrador", "guardiao"].includes(usuario?.papel ?? "") && (
+              <nav className="flex items-center gap-4 text-xs text-aude-stone/70">
+                <Link href="/" className="transition hover:text-aude-white">
+                  Clientes
+                </Link>
+                <Link href="/financeiro" className="transition hover:text-aude-white">
+                  Financeiro
+                </Link>
+              </nav>
+            )}
+          </div>
           <div className="flex items-center gap-4 text-xs text-aude-stone/80">
             <span>
               {usuario?.nome ?? usuario?.email} · {papelLabel}

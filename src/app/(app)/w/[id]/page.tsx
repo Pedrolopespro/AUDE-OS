@@ -210,22 +210,30 @@ export default async function WorkspacePage({
         </div>
       </section>
 
-      {/* Abas futuras do Workspace — item 9 do MVP (estrutura criada, vazia) */}
+      {/* Abas do Workspace */}
       <section className="mt-10">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-aude-black/50">
-          Estrutura do Workspace
+          Workspace
         </h2>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {["Site", "Conhecimento", "Projetos", "Relatórios"].map((aba) => (
-            <div
-              key={aba}
-              className="rounded-lg border border-dashed border-aude-stone p-4 text-center text-xs text-aude-black/40"
+          {[
+            { nome: "Projetos", href: `/w/${id}/projetos` },
+            { nome: "Conhecimento", href: `/w/${id}/conhecimento` },
+            { nome: "Histórico", href: `/w/${id}/historico` },
+          ].map((aba) => (
+            <Link
+              key={aba.nome}
+              href={aba.href}
+              className="rounded-lg border border-aude-stone bg-white p-4 text-center text-sm font-medium transition hover:border-aude-petrol hover:shadow-sm"
             >
-              {aba}
-              <br />
-              <span className="text-[10px]">próximas fases</span>
-            </div>
+              {aba.nome}
+            </Link>
           ))}
+          <div className="rounded-lg border border-dashed border-aude-stone p-4 text-center text-xs text-aude-black/40">
+            Relatórios
+            <br />
+            <span className="text-[10px]">próximas fases</span>
+          </div>
         </div>
       </section>
 
