@@ -1,0 +1,376 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #19213a;
+  --muted: #687188;
+  --line: #e4e8f1;
+  --blue: #4965ed;
+  --navy: #192347;
+  --canvas: #f4f6fb;
+  --white: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 10% 0%, #e9edff 0, transparent 34%),
+    radial-gradient(circle at 100% 100%, #e7f8f1 0, transparent 30%),
+    var(--canvas);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+a,
+button {
+  font: inherit;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid #263fba;
+  outline-offset: 3px;
+}
+
+.connect-shell,
+.legal-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.connect-card {
+  width: min(100%, 520px);
+  border: 1px solid rgba(221, 226, 238, 0.9);
+  border-radius: 28px;
+  padding: 28px 22px 22px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 28px 80px rgba(32, 43, 83, 0.12);
+}
+
+.connect-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 34px;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 13px;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 800;
+  background: var(--navy);
+}
+
+.connect-brand div {
+  display: flex;
+  flex-direction: column;
+}
+
+.connect-brand strong {
+  font-size: 15px;
+  letter-spacing: 0.14em;
+}
+
+.connect-brand span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.instagram-badge {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 20px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #6743d7, #e33b7e 60%, #f3a33a);
+  box-shadow: 0 12px 28px rgba(210, 57, 116, 0.24);
+}
+
+.instagram-glyph {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border: 3px solid white;
+  border-radius: 9px;
+}
+
+.instagram-glyph::before {
+  position: absolute;
+  inset: 6px;
+  border: 3px solid white;
+  border-radius: 50%;
+  content: "";
+}
+
+.instagram-glyph::after {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: white;
+  content: "";
+}
+
+.eyebrow {
+  margin: 0 0 9px;
+  color: #8a93a7;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(27px, 7vw, 38px);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+}
+
+.lead,
+.state-card > p:not(.eyebrow) {
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.permission-list {
+  display: grid;
+  gap: 10px;
+  margin: 25px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.permission-list li {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 11px;
+  align-items: center;
+  border: 1px solid #edf0f5;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fafbfc;
+}
+
+.permission-list li > span {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #0b8159;
+  font-size: 13px;
+  font-weight: 800;
+  background: #e4f7ef;
+}
+
+.permission-list div {
+  display: flex;
+  flex-direction: column;
+}
+
+.permission-list strong {
+  font-size: 13px;
+}
+
+.permission-list small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.instagram-button {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+  background: var(--blue);
+  box-shadow: 0 12px 24px rgba(73, 101, 237, 0.24);
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.instagram-button:hover {
+  background: #3854db;
+  transform: translateY(-1px);
+}
+
+.security-note {
+  margin: 14px 8px 24px;
+  color: #788196;
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.connect-card footer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  color: #98a0b1;
+  font-size: 11px;
+}
+
+.connect-card footer a {
+  color: #667089;
+}
+
+.state-card {
+  text-align: center;
+}
+
+.state-card .brand-mark,
+.state-card .state-icon {
+  margin-bottom: 24px;
+}
+
+.state-icon {
+  width: 64px;
+  height: 64px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.state-icon.success {
+  color: #0b8159;
+  background: #e4f7ef;
+}
+
+.state-icon.warning {
+  color: #a34b35;
+  background: #ffede8;
+}
+
+.success-detail {
+  margin-top: 24px;
+  border-radius: 14px;
+  padding: 14px;
+  color: #546078;
+  font-size: 12px;
+  line-height: 1.55;
+  background: #f4f6fb;
+}
+
+.loading-card {
+  display: grid;
+  gap: 15px;
+}
+
+.loading-line,
+.loading-button {
+  height: 16px;
+  border-radius: 8px;
+  background: #eef0f5;
+}
+
+.loading-line {
+  width: 68%;
+}
+
+.loading-line.wide {
+  width: 90%;
+  height: 28px;
+}
+
+.loading-button {
+  height: 54px;
+  margin-top: 20px;
+}
+
+.legal-shell {
+  align-items: start;
+}
+
+.legal-card {
+  width: min(100%, 760px);
+  border-radius: 24px;
+  padding: 32px 24px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(32, 43, 83, 0.1);
+}
+
+.legal-brand {
+  display: inline-block;
+  margin-bottom: 42px;
+  color: var(--navy);
+  font-size: 16px;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+}
+
+.legal-card h2 {
+  margin: 30px 0 8px;
+  font-size: 19px;
+}
+
+.legal-card p {
+  color: #59647b;
+  line-height: 1.75;
+}
+
+.legal-card a {
+  color: #304dc5;
+}
+
+@media (min-width: 640px) {
+  .connect-shell,
+  .legal-shell {
+    padding: 48px 24px;
+  }
+
+  .connect-card {
+    padding: 36px 38px 28px;
+  }
+
+  .legal-card {
+    padding: 48px 54px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --muted: #424b60;
+    --line: #9da5b6;
+  }
+}
