@@ -1532,6 +1532,11 @@ button {
   background: #c9ced8;
 }
 
+.connection-dot.connected {
+  background: #19a974;
+  box-shadow: 0 0 0 3px #e6f7f0;
+}
+
 .metrics-locked {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1558,6 +1563,15 @@ button {
   font-size: 15px;
 }
 
+.metrics-locked .account-type {
+  overflow: hidden;
+  font-size: 8px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .instagram-card > p {
   margin: 12px 0;
   color: var(--muted);
@@ -1565,8 +1579,35 @@ button {
   line-height: 1.5;
 }
 
+.instagram-card > .instagram-error {
+  color: #a33c3c;
+}
+
 .instagram-card > button {
   width: 100%;
+}
+
+.instagram-actions {
+  display: grid;
+  gap: 7px;
+}
+
+.instagram-actions .secondary-button {
+  width: 100%;
+}
+
+.instagram-disconnect {
+  border: 0;
+  padding: 5px;
+  color: #a33c3c;
+  font-size: 8px;
+  font-weight: 700;
+  background: transparent;
+  cursor: pointer;
+}
+
+.primary-button[href] {
+  text-decoration: none;
 }
 
 .production-head {

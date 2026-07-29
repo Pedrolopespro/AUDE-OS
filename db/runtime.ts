@@ -105,8 +105,34 @@ export async function ensureDatabase() {
         FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
       )
     `),
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS instagram_connections (
+        client_id TEXT PRIMARY KEY,
+        instagram_user_id TEXT NOT NULL,
+        username TEXT NOT NULL,
+        account_name TEXT,
+        account_type TEXT,
+        profile_picture_url TEXT,
+        access_token_encrypted TEXT NOT NULL,
+        token_expires_at TEXT,
+        followers_count INTEGER NOT NULL DEFAULT 0,
+        media_count INTEGER NOT NULL DEFAULT 0,
+        connected_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        last_synced_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+      )
+    `),
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS meta_oauth_states (
+        state TEXT PRIMARY KEY,
+        client_id TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+      )
+    `),
     db.prepare("CREATE INDEX IF NOT EXISTS opportunities_stage_idx ON opportunities(stage)"),
     db.prepare("CREATE INDEX IF NOT EXISTS social_posts_client_date_idx ON social_posts(client_id, scheduled_at)"),
+    db.prepare("CREATE INDEX IF NOT EXISTS meta_oauth_states_created_idx ON meta_oauth_states(created_at)"),
     db.prepare("INSERT OR IGNORE INTO goals (id) VALUES (1)"),
   ]);
 

@@ -779,6 +779,18 @@ export function DashboardApp() {
       });
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const clientId = params.get("client");
+    if (clientId && params.get("service") === "social-media") {
+      queueMicrotask(() => {
+        setSelectedClientId(clientId);
+        setSelectedService("Social media");
+        setPage("clients");
+      });
+    }
+  }, []);
+
   const selectedClient = clients.find((client) => client.id === selectedClientId) ?? null;
   const title = useMemo(() => {
     if (selectedClient && selectedService) {

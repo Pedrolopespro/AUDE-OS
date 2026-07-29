@@ -29,6 +29,20 @@ type ClientIdentity = {
   color: string;
 };
 
+type InstagramConnection =
+  | { connected: false }
+  | {
+      connected: true;
+      username: string;
+      accountName: string | null;
+      accountType: string | null;
+      profilePictureUrl: string | null;
+      followersCount: number;
+      mediaCount: number;
+      tokenExpiresAt: string | null;
+      lastSyncedAt: string;
+    };
+
 const statusLabels: Record<SocialPostStatus, string> = {
   draft: "Ideia",
   production: "Em produção",
@@ -303,7 +317,13 @@ function NewPostModal({
   );
 }
 
-function InstagramSetup({ close }: { close: () => void }) {
+function InstagramSetup({
+  clientId,
+  close,
+}: {
+  clientId: string;
+  close: () => void;
+}) {
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={close}>
       <div
@@ -326,26 +346,31 @@ function InstagramSetup({ close }: { close: () => void }) {
           <div className="integration-guide-icon">
             <InstagramIcon />
           </div>
-          <h3>Integração pronta para configurar</h3>
+          <h3>Autorize a conta deste cliente</h3>
           <p>
-            Para importar alcance, seguidores, interações e desempenho dos posts,
-            a conta precisa ser profissional e estar vinculada a uma Página do
-            Facebook.
+            Você será direcionado ao Instagram. Entre com a conta profissional
+            do cliente e aprove o acesso solicitado pela AUDE Gestão.
           </p>
           <ol>
-            <li><span>1</span> Criar o aplicativo AUDE no Meta for Developers</li>
-            <li><span>2</span> Autorizar a conta profissional do cliente</li>
-            <li><span>3</span> Ativar a sincronização diária de métricas</li>
+            <li><span>1</span> Entrar no Instagram profissional do cliente</li>
+            <li><span>2</span> Autorizar perfil, métricas e publicação</li>
+            <li><span>3</span> Retornar automaticamente ao painel da AUDE</li>
           </ol>
           <div className="integration-note">
-            A próxima etapa exige o App ID e o App Secret da Meta. As credenciais
-            ficam somente no servidor.
+            A senha do cliente nunca passa pelo sistema da AUDE. A autorização
+            acontece diretamente nos servidores da Meta.
           </div>
         </div>
         <div className="modal-actions">
-          <button className="primary-button" type="button" onClick={close}>
-            Entendi
+          <button className="secondary-button" type="button" onClick={close}>
+            Cancelar
           </button>
+          <a
+            className="primary-button"
+            href={`/api/clients/${clientId}/instagram/connect`}
+          >
+            Continuar com Instagram
+          </a>
         </div>
       </div>
     </div>
@@ -364,6 +389,11 @@ export function SocialMediaPanel({
   const [newPostDate, setNewPostDate] = useState<Date | null>(null);
   const [editingPost, setEditingPost] = useState<SocialPost | null>(null);
   const [showInstagramSetup, setShowInstagramSetup] = useState(false);
+  const [instagram, setInstagram] = useState<InstagramConnection>({
+    connected: false,
+  });
+  const [instagramError, setInstagramError] = useState("");
+  const [syncingInstagram, setSyncingInstagram] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -387,6 +417,35 @@ export function SocialMediaPanel({
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
+  }, [client.id]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`/api/clients/${client.id}/instagram`, {
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        setInstagram(data as InstagramConnection);
+      })
+      .catch((caught) => {
+        if (caught instanceof DOMException && caught.name === "AbortError") return;
+        setInstagramError(
+          caught instanceof Error
+            ? caught.message
+            : "Não foi possível carregar o Instagram.",
+        );
+      });
+    return () => controller.abort();
+  }, [client.id]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const oauthError = params.get("instagram_error");
+    if (params.get("client") === client.id && oauthError) {
+      queueMicrotask(() => setInstagramError(oauthError));
+    }
   }, [client.id]);
 
   const days = useMemo(() => buildCalendarDays(month), [month]);
@@ -473,6 +532,35 @@ export function SocialMediaPanel({
 
   const moveMonth = (amount: number) =>
     setMonth((current) => new Date(current.getFullYear(), current.getMonth() + amount, 1));
+
+  const syncInstagram = async () => {
+    setSyncingInstagram(true);
+    setInstagramError("");
+    try {
+      const response = await fetch(`/api/clients/${client.id}/instagram`, {
+        method: "POST",
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setInstagram(data as InstagramConnection);
+    } catch (caught) {
+      setInstagramError(
+        caught instanceof Error
+          ? caught.message
+          : "Não foi possível atualizar os dados.",
+      );
+    } finally {
+      setSyncingInstagram(false);
+    }
+  };
+
+  const disconnectInstagram = async () => {
+    if (!window.confirm("Desconectar o Instagram deste cliente?")) return;
+    const response = await fetch(`/api/clients/${client.id}/instagram`, {
+      method: "DELETE",
+    });
+    if (response.ok) setInstagram({ connected: false });
+  };
 
   return (
     <section className="social-media-page">
@@ -577,18 +665,84 @@ export function SocialMediaPanel({
           <article className="panel instagram-card">
             <div className="instagram-title">
               <InstagramIcon />
-              <div><strong>Instagram</strong><span>Conta do cliente</span></div>
-              <i className="connection-dot" />
+              <div>
+                <strong>
+                  {instagram.connected ? `@${instagram.username}` : "Instagram"}
+                </strong>
+                <span>
+                  {instagram.connected
+                    ? instagram.accountName ?? "Conta profissional conectada"
+                    : "Conta do cliente"}
+                </span>
+              </div>
+              <i
+                className={`connection-dot${instagram.connected ? " connected" : ""}`}
+              />
             </div>
             <div className="metrics-locked">
-              <div><span>Seguidores</span><strong>—</strong></div>
-              <div><span>Alcance</span><strong>—</strong></div>
-              <div><span>Interações</span><strong>—</strong></div>
+              <div>
+                <span>Seguidores</span>
+                <strong>
+                  {instagram.connected
+                    ? instagram.followersCount.toLocaleString("pt-BR")
+                    : "—"}
+                </strong>
+              </div>
+              <div>
+                <span>Publicações</span>
+                <strong>
+                  {instagram.connected
+                    ? instagram.mediaCount.toLocaleString("pt-BR")
+                    : "—"}
+                </strong>
+              </div>
+              <div>
+                <span>Tipo</span>
+                <strong className="account-type">
+                  {instagram.connected
+                    ? instagram.accountType?.replace("_", " ") ?? "PRO"
+                    : "—"}
+                </strong>
+              </div>
             </div>
-            <p>Conecte a conta profissional para importar métricas reais.</p>
-            <button className="secondary-button" onClick={() => setShowInstagramSetup(true)}>
-              Conectar Instagram
-            </button>
+            {instagramError && <p className="instagram-error">{instagramError}</p>}
+            {instagram.connected ? (
+              <>
+                <p>
+                  Atualizado em{" "}
+                  {new Date(instagram.lastSyncedAt).toLocaleString("pt-BR", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  })}
+                  .
+                </p>
+                <div className="instagram-actions">
+                  <button
+                    className="secondary-button"
+                    onClick={syncInstagram}
+                    disabled={syncingInstagram}
+                  >
+                    {syncingInstagram ? "Atualizando..." : "Atualizar dados"}
+                  </button>
+                  <button
+                    className="instagram-disconnect"
+                    onClick={disconnectInstagram}
+                  >
+                    Desconectar
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>Conecte a conta profissional para importar métricas reais.</p>
+                <button
+                  className="secondary-button"
+                  onClick={() => setShowInstagramSetup(true)}
+                >
+                  Conectar Instagram
+                </button>
+              </>
+            )}
           </article>
 
           <article className="panel production-list">
@@ -657,7 +811,10 @@ export function SocialMediaPanel({
         />
       )}
       {showInstagramSetup && (
-        <InstagramSetup close={() => setShowInstagramSetup(false)} />
+        <InstagramSetup
+          clientId={client.id}
+          close={() => setShowInstagramSetup(false)}
+        />
       )}
     </section>
   );

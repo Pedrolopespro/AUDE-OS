@@ -50,3 +50,28 @@ export const socialPosts = sqliteTable("social_posts", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const instagramConnections = sqliteTable("instagram_connections", {
+  clientId: text("client_id")
+    .primaryKey()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  instagramUserId: text("instagram_user_id").notNull(),
+  username: text("username").notNull(),
+  accountName: text("account_name"),
+  accountType: text("account_type"),
+  profilePictureUrl: text("profile_picture_url"),
+  accessTokenEncrypted: text("access_token_encrypted").notNull(),
+  tokenExpiresAt: text("token_expires_at"),
+  followersCount: integer("followers_count").notNull().default(0),
+  mediaCount: integer("media_count").notNull().default(0),
+  connectedAt: text("connected_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  lastSyncedAt: text("last_synced_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const metaOauthStates = sqliteTable("meta_oauth_states", {
+  state: text("state").primaryKey(),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
