@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { SocialMediaPanel } from "./social-media-panel";
 
 type PaymentStatus = "confirm" | "paid" | "overdue";
 type ContractType = "fixed" | "percentage";
@@ -87,12 +88,6 @@ const money = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
   maximumFractionDigits: 0,
 });
-
-const paymentLabels: Record<PaymentStatus, string> = {
-  confirm: "A confirmar",
-  paid: "Pago",
-  overdue: "Em atraso",
-};
 
 const stageLabels: Record<Stage, string> = {
   prospect: "Prospecção",
@@ -352,10 +347,12 @@ function ClientDetail({
   client,
   onBack,
   updatePayment,
+  openService,
 }: {
   client: Client;
   onBack: () => void;
   updatePayment: (id: string, status: PaymentStatus) => void;
+  openService: (service: string) => void;
 }) {
   return (
     <section className="client-detail">
@@ -390,9 +387,20 @@ function ClientDetail({
           </div>
           <div className="service-grid">
             {client.services.map((service) => (
-              <button className="service-card" key={service}>
+              <button
+                className="service-card"
+                key={service}
+                onClick={() => openService(service)}
+              >
                 <span>{service.slice(0, 1)}</span>
-                <div><strong>{service}</strong><i>Nenhuma atividade cadastrada</i></div>
+                <div>
+                  <strong>{service}</strong>
+                  <i>
+                    {service === "Social media"
+                      ? "Calendário, produção e métricas"
+                      : "Painel em preparação"}
+                  </i>
+                </div>
                 <b>›</b>
               </button>
             ))}
@@ -754,6 +762,7 @@ export function DashboardApp() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [goals, setGoals] = useState<Goals>({ prospecting: null, meetings: null, closedClients: null });
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
   const [showNewClient, setShowNewClient] = useState(false);
   const [showNewOpportunity, setShowNewOpportunity] = useState(false);
 
@@ -772,6 +781,9 @@ export function DashboardApp() {
 
   const selectedClient = clients.find((client) => client.id === selectedClientId) ?? null;
   const title = useMemo(() => {
+    if (selectedClient && selectedService) {
+      return `${selectedService} · ${selectedClient.name}`;
+    }
     if (selectedClient) return selectedClient.name;
     return {
       overview: "Visão geral",
@@ -780,16 +792,22 @@ export function DashboardApp() {
       finance: "Financeiro",
       settings: "Configurações",
     }[page];
-  }, [page, selectedClient]);
+  }, [page, selectedClient, selectedService]);
 
   const changePage = (next: Page) => {
     setSelectedClientId(null);
+    setSelectedService(null);
     setPage(next);
   };
 
   const openClient = (client: Client) => {
     setSelectedClientId(client.id);
+    setSelectedService(null);
     setPage("clients");
+  };
+
+  const openService = (service: string) => {
+    if (service === "Social media") setSelectedService(service);
   };
 
   const updatePayment = async (id: string, paymentStatus: PaymentStatus) => {
@@ -830,8 +848,18 @@ export function DashboardApp() {
       <main className="main-content">
         <Topbar title={title} onNewClient={() => setShowNewClient(true)} />
         <div className="content">
-          {selectedClient ? (
-            <ClientDetail client={selectedClient} onBack={() => setSelectedClientId(null)} updatePayment={updatePayment} />
+          {selectedClient && selectedService === "Social media" ? (
+            <SocialMediaPanel
+              client={selectedClient}
+              onBack={() => setSelectedService(null)}
+            />
+          ) : selectedClient ? (
+            <ClientDetail
+              client={selectedClient}
+              onBack={() => setSelectedClientId(null)}
+              updatePayment={updatePayment}
+              openService={openService}
+            />
           ) : page === "overview" ? (
             <Overview clients={clients} opportunities={opportunities} goals={goals} openClient={openClient} goTo={changePage} addOpportunity={() => setShowNewOpportunity(true)} />
           ) : page === "clients" ? (

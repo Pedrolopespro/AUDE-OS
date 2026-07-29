@@ -35,3 +35,18 @@ export const goals = sqliteTable("goals", {
   closedClients: integer("closed_clients"),
   updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const socialPosts = sqliteTable("social_posts", {
+  id: text("id").primaryKey(),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  caption: text("caption").notNull().default(""),
+  scheduledAt: text("scheduled_at").notNull(),
+  status: text("status").notNull().default("draft"),
+  format: text("format").notNull().default("feed"),
+  channels: text("channels").notNull().default('["instagram"]'),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});

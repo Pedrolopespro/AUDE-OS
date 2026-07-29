@@ -90,7 +90,23 @@ export async function ensureDatabase() {
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `),
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS social_posts (
+        id TEXT PRIMARY KEY,
+        client_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        caption TEXT NOT NULL DEFAULT '',
+        scheduled_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'draft',
+        format TEXT NOT NULL DEFAULT 'feed',
+        channels TEXT NOT NULL DEFAULT '["instagram"]',
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+      )
+    `),
     db.prepare("CREATE INDEX IF NOT EXISTS opportunities_stage_idx ON opportunities(stage)"),
+    db.prepare("CREATE INDEX IF NOT EXISTS social_posts_client_date_idx ON social_posts(client_id, scheduled_at)"),
     db.prepare("INSERT OR IGNORE INTO goals (id) VALUES (1)"),
   ]);
 
