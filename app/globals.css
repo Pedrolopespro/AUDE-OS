@@ -1832,6 +1832,72 @@ button {
   background: #fbf5e7;
 }
 
+.invite-loading {
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  margin-top: 14px;
+  border-radius: 10px;
+  color: #717b91;
+  font-size: 10px;
+  background: #f5f6fa;
+}
+
+.invite-box {
+  margin-top: 14px;
+  border: 1px solid #e3e7ef;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f9fafc;
+}
+
+.invite-box label {
+  display: block;
+  margin-bottom: 7px;
+  color: #70798e;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.invite-box > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+}
+
+.invite-box input {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  border: 1px solid #dde2ec;
+  border-radius: 8px;
+  padding: 0 10px;
+  color: #556077;
+  font-size: 9px;
+  background: #fff;
+}
+
+.invite-box button {
+  min-width: 70px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 11px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  background: var(--blue);
+  cursor: pointer;
+}
+
+.invite-box small {
+  display: block;
+  margin-top: 7px;
+  color: #8a92a3;
+  font-size: 8px;
+}
+
 @media (max-width: 980px) {
   .metrics-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

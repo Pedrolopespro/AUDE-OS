@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type SocialPostStatus =
   | "draft"
@@ -30,7 +30,11 @@ type ClientIdentity = {
 };
 
 type InstagramConnection =
-  | { connected: false }
+  | {
+      connected: false;
+      invitationPending?: boolean;
+      invitationExpiresAt?: string | null;
+    }
   | {
       connected: true;
       username: string;
@@ -319,11 +323,76 @@ function NewPostModal({
 
 function InstagramSetup({
   clientId,
+  clientName,
   close,
+  invited,
 }: {
   clientId: string;
+  clientName: string;
   close: () => void;
+  invited: (expiresAt: string) => void;
 }) {
+  const [invitationUrl, setInvitationUrl] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
+  const invitedRef = useRef(invited);
+
+  useEffect(() => {
+    invitedRef.current = invited;
+  }, [invited]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`/api/clients/${clientId}/instagram/invite`, {
+      method: "POST",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        setInvitationUrl(data.invitationUrl);
+        setExpiresAt(data.expiresAt);
+        invitedRef.current(data.expiresAt);
+      })
+      .catch((caught) => {
+        if (caught instanceof DOMException && caught.name === "AbortError") return;
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : "Não foi possível gerar o convite.",
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [clientId]);
+
+  const copyInvitation = async () => {
+    try {
+      await navigator.clipboard.writeText(invitationUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2200);
+    } catch {
+      setError("Não foi possível copiar. Abra o link e copie pela barra do navegador.");
+    }
+  };
+
+  const shareInvitation = async () => {
+    if (!navigator.share) return copyInvitation();
+    try {
+      await navigator.share({
+        title: `Conectar Instagram de ${clientName}`,
+        text: `A AUDE enviou um convite seguro para conectar o Instagram de ${clientName}.`,
+        url: invitationUrl,
+      });
+    } catch {
+      // The user may close the native sharing sheet without sharing.
+    }
+  };
+
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={close}>
       <div
@@ -346,31 +415,57 @@ function InstagramSetup({
           <div className="integration-guide-icon">
             <InstagramIcon />
           </div>
-          <h3>Autorize a conta deste cliente</h3>
+          <h3>Envie o convite para {clientName}</h3>
           <p>
-            Você será direcionado ao Instagram. Entre com a conta profissional
-            do cliente e aprove o acesso solicitado pela AUDE Gestão.
+            O cliente abre o link no próprio celular, entra diretamente na Meta
+            e autoriza a conexão. Você não precisa receber a senha.
           </p>
           <ol>
-            <li><span>1</span> Entrar no Instagram profissional do cliente</li>
-            <li><span>2</span> Autorizar perfil, métricas e publicação</li>
-            <li><span>3</span> Retornar automaticamente ao painel da AUDE</li>
+            <li><span>1</span> Copie e envie o link por WhatsApp ou email</li>
+            <li><span>2</span> O cliente autoriza no Instagram oficial</li>
+            <li><span>3</span> A conta aparece conectada neste painel</li>
           </ol>
           <div className="integration-note">
-            A senha do cliente nunca passa pelo sistema da AUDE. A autorização
-            acontece diretamente nos servidores da Meta.
+            Link individual, válido por 48 horas e inutilizado após a conexão.
           </div>
+          {loading && <div className="invite-loading">Gerando convite seguro...</div>}
+          {invitationUrl && (
+            <div className="invite-box">
+              <label htmlFor="instagram-invitation">Link de conexão</label>
+              <div>
+                <input
+                  id="instagram-invitation"
+                  readOnly
+                  value={invitationUrl}
+                  onFocus={(event) => event.currentTarget.select()}
+                />
+                <button type="button" onClick={copyInvitation}>
+                  {copied ? "Copiado ✓" : "Copiar"}
+                </button>
+              </div>
+              <small>
+                Expira em{" "}
+                {new Date(expiresAt).toLocaleString("pt-BR", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })}
+              </small>
+            </div>
+          )}
+          {error && <p className="form-error" role="alert">{error}</p>}
         </div>
         <div className="modal-actions">
           <button className="secondary-button" type="button" onClick={close}>
-            Cancelar
+            Fechar
           </button>
-          <a
+          <button
             className="primary-button"
-            href={`/api/clients/${clientId}/instagram/connect`}
+            type="button"
+            onClick={shareInvitation}
+            disabled={!invitationUrl}
           >
-            Continuar com Instagram
-          </a>
+            Compartilhar convite
+          </button>
         </div>
       </div>
     </div>
@@ -734,12 +829,18 @@ export function SocialMediaPanel({
               </>
             ) : (
               <>
-                <p>Conecte a conta profissional para importar métricas reais.</p>
+                <p>
+                  {instagram.invitationPending
+                    ? "Convite enviado. Aguardando autorização do cliente."
+                    : "Envie um link seguro para o cliente autorizar a conta."}
+                </p>
                 <button
                   className="secondary-button"
                   onClick={() => setShowInstagramSetup(true)}
                 >
-                  Conectar Instagram
+                  {instagram.invitationPending
+                    ? "Gerar novo convite"
+                    : "Solicitar conexão"}
                 </button>
               </>
             )}
@@ -813,7 +914,15 @@ export function SocialMediaPanel({
       {showInstagramSetup && (
         <InstagramSetup
           clientId={client.id}
+          clientName={client.name}
           close={() => setShowInstagramSetup(false)}
+          invited={(invitationExpiresAt) =>
+            setInstagram({
+              connected: false,
+              invitationPending: true,
+              invitationExpiresAt,
+            })
+          }
         />
       )}
     </section>
