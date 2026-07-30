@@ -128,3 +128,29 @@ export const accessInvitations = sqliteTable("access_invitations", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   acceptedAt: text("accepted_at"),
 });
+
+export const agencySettings = sqliteTable("agency_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const ppcGoogleAdsAccounts = sqliteTable(
+  "ppc_google_ads_accounts",
+  {
+    clientId: text("client_id")
+      .primaryKey()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    customerId: text("customer_id").notNull(),
+    accountName: text("account_name"),
+    status: text("status").notNull().default("pending_link"),
+    currencyCode: text("currency_code"),
+    timeZone: text("time_zone"),
+    linkedAt: text("linked_at"),
+    lastSyncedAt: text("last_synced_at"),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("ppc_google_ads_customer_id_unique").on(table.customerId),
+  ],
+);

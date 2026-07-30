@@ -169,6 +169,27 @@ export async function ensureDatabase() {
         FOREIGN KEY (invited_by) REFERENCES app_users(id) ON DELETE SET NULL
       )
     `),
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS agency_settings (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `),
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS ppc_google_ads_accounts (
+        client_id TEXT PRIMARY KEY NOT NULL,
+        customer_id TEXT NOT NULL,
+        account_name TEXT,
+        status TEXT NOT NULL DEFAULT 'pending_link',
+        currency_code TEXT,
+        time_zone TEXT,
+        linked_at TEXT,
+        last_synced_at TEXT,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+      )
+    `),
     db.prepare("CREATE INDEX IF NOT EXISTS opportunities_stage_idx ON opportunities(stage)"),
     db.prepare("CREATE INDEX IF NOT EXISTS social_posts_client_date_idx ON social_posts(client_id, scheduled_at)"),
     db.prepare("CREATE INDEX IF NOT EXISTS meta_oauth_states_created_idx ON meta_oauth_states(created_at)"),
@@ -177,6 +198,7 @@ export async function ensureDatabase() {
     db.prepare("CREATE INDEX IF NOT EXISTS client_memberships_client_idx ON client_memberships(client_id)"),
     db.prepare("CREATE INDEX IF NOT EXISTS access_invitations_email_idx ON access_invitations(email, status)"),
     db.prepare("CREATE INDEX IF NOT EXISTS access_invitations_expiry_idx ON access_invitations(expires_at, status)"),
+    db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS ppc_google_ads_customer_id_unique ON ppc_google_ads_accounts(customer_id)"),
     db.prepare("INSERT OR IGNORE INTO goals (id) VALUES (1)"),
   ]);
 

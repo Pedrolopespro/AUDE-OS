@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AccessManagement } from "./access-management";
+import { PpcPanel } from "./ppc-panel";
 import { SocialMediaPanel } from "./social-media-panel";
 import type { AppUser } from "@/lib/access";
 
@@ -55,6 +56,10 @@ const stageLabels: Record<Stage, string> = {
   closed: "Fechado",
   lost: "Não avançou",
 };
+
+function serviceLabel(service: string) {
+  return service === "Tráfego" ? "PAINEL PPC" : service;
+}
 
 function BrandMark() {
   return <div className="brand-mark" aria-hidden="true">A</div>;
@@ -279,7 +284,7 @@ function Overview({
                 <span className="client-logo" style={{ background: client.color }}>{client.initials}</span>
                 <span className="client-main">
                   <strong>{client.name}</strong>
-                  <span>{client.services.join(" · ")}</span>
+                  <span>{client.services.map(serviceLabel).join(" · ")}</span>
                 </span>
                 <span className="contract">
                   <strong>{client.contractType === "fixed" ? money.format(client.value) : `${client.value}%`}</strong>
@@ -338,7 +343,9 @@ function ClientsPage({
             <strong>{client.name}</strong>
             <span>{client.services.length} serviços</span>
             <div className="service-tags">
-              {client.services.slice(0, 3).map((service) => <i key={service}>{service}</i>)}
+              {client.services.slice(0, 3).map((service) => (
+                <i key={service}>{serviceLabel(service)}</i>
+              ))}
               {client.services.length > 3 && <i>+{client.services.length - 3}</i>}
             </div>
           </button>
@@ -369,7 +376,7 @@ function ClientDetail({
         <div>
           <span className="status-badge active">Cliente ativo</span>
           <h2>{client.name}</h2>
-          <p>{client.services.join(" · ")}</p>
+          <p>{client.services.map(serviceLabel).join(" · ")}</p>
         </div>
         {canManageClient && (
           <div className="hero-contract">
@@ -403,10 +410,12 @@ function ClientDetail({
               >
                 <span>{service.slice(0, 1)}</span>
                 <div>
-                  <strong>{service}</strong>
+                  <strong>{serviceLabel(service)}</strong>
                   <i>
                     {service === "Social media"
                       ? "Calendário, produção e métricas"
+                      : service === "Tráfego"
+                        ? "Google Ads · performance e análise"
                       : "Painel em preparação"}
                   </i>
                 </div>
@@ -673,7 +682,8 @@ function NewClientModal({
                 className={selected.includes(service) ? "choice selected" : "choice"}
                 onClick={() => setSelected((current) => current.includes(service) ? current.filter((item) => item !== service) : [...current, service])}
               >
-                <span>{selected.includes(service) ? "✓" : "＋"}</span>{service}
+                <span>{selected.includes(service) ? "✓" : "＋"}</span>
+                {serviceLabel(service)}
               </button>
             ))}
           </div>
@@ -801,10 +811,16 @@ export function DashboardApp({ currentUser }: { currentUser: AppUser }) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const clientId = params.get("client");
-    if (clientId && params.get("service") === "social-media") {
+    const serviceParam = params.get("service");
+    if (
+      clientId &&
+      (serviceParam === "social-media" || serviceParam === "ppc")
+    ) {
       queueMicrotask(() => {
         setSelectedClientId(clientId);
-        setSelectedService("Social media");
+        setSelectedService(
+          serviceParam === "ppc" ? "Tráfego" : "Social media",
+        );
         setPage("clients");
       });
     }
@@ -813,7 +829,8 @@ export function DashboardApp({ currentUser }: { currentUser: AppUser }) {
   const selectedClient = clients.find((client) => client.id === selectedClientId) ?? null;
   const title = useMemo(() => {
     if (selectedClient && selectedService) {
-      return `${selectedService} · ${selectedClient.name}`;
+      const serviceName = serviceLabel(selectedService);
+      return `${serviceName} · ${selectedClient.name}`;
     }
     if (selectedClient) return selectedClient.name;
     return {
@@ -839,7 +856,9 @@ export function DashboardApp({ currentUser }: { currentUser: AppUser }) {
   };
 
   const openService = (service: string) => {
-    if (service === "Social media") setSelectedService(service);
+    if (service === "Social media" || service === "Tráfego") {
+      setSelectedService(service);
+    }
   };
 
   const updatePayment = async (id: string, paymentStatus: PaymentStatus) => {
@@ -894,6 +913,12 @@ export function DashboardApp({ currentUser }: { currentUser: AppUser }) {
               client={selectedClient}
               onBack={() => setSelectedService(null)}
               mode={canManageContent ? "manage" : "view"}
+            />
+          ) : selectedClient && selectedService === "Tráfego" ? (
+            <PpcPanel
+              client={selectedClient}
+              onBack={() => setSelectedService(null)}
+              canConfigure={agencyLeader}
             />
           ) : selectedClient ? (
             <ClientDetail

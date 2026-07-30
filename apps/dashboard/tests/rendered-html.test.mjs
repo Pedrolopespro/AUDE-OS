@@ -112,3 +112,30 @@ test("protects Instagram analytics by client membership", async () => {
   assert.match(socialPanel, /Instagram Insights/);
   assert.doesNotMatch(insightsPanel, /access_token|META_APP_SECRET/);
 });
+
+test("keeps the PPC panel read-only and scoped to each client", async () => {
+  const [ppcRoute, ppcPanel, migration] = await Promise.all([
+    readFile(
+      new URL("../app/api/clients/[id]/ppc/route.ts", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../app/ppc-panel.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../drizzle/0004_bent_hardball.sql", import.meta.url),
+      "utf8",
+    ),
+  ]);
+
+  assert.match(ppcRoute, /requireClientView/);
+  assert.match(ppcRoute, /requireClientManagement/);
+  assert.match(ppcRoute, /mode: "read_only"/);
+  assert.match(ppcPanel, /PAINEL PPC/);
+  assert.match(ppcPanel, /Somente leitura/);
+  assert.match(ppcPanel, /Google Business Profile/);
+  assert.match(ppcPanel, /Google Search Console/);
+  assert.match(ppcPanel, /Google Analytics 4/);
+  assert.match(ppcPanel, /Google Tag Manager/);
+  assert.doesNotMatch(ppcPanel, /access_token|DEVELOPER_TOKEN/);
+  assert.match(migration, /ppc_google_ads_accounts/);
+  assert.match(migration, /ppc_google_ads_customer_id_unique/);
+});
