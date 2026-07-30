@@ -3,6 +3,15 @@ function base64ToBytes(value: string) {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
+function base64UrlToBytes(value: string) {
+  return base64ToBytes(
+    value.replaceAll("-", "+").replaceAll("_", "/").padEnd(
+      Math.ceil(value.length / 4) * 4,
+      "=",
+    ),
+  );
+}
+
 function bytesToBase64(value: Uint8Array) {
   let binary = "";
   for (const byte of value) binary += String.fromCharCode(byte);
@@ -63,4 +72,45 @@ export async function decryptAccessToken(payload: string, keyValue: string) {
     base64ToBytes(encryptedPart),
   );
   return new TextDecoder().decode(decrypted);
+}
+
+export async function verifyMetaSignedRequest(
+  signedRequest: string,
+  appSecret: string,
+) {
+  const [encodedSignature, encodedPayload] = signedRequest.split(".");
+  if (!encodedSignature || !encodedPayload) {
+    throw new Error("Solicitação assinada inválida.");
+  }
+
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(appSecret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["verify"],
+  );
+  const verified = await crypto.subtle.verify(
+    "HMAC",
+    key,
+    base64UrlToBytes(encodedSignature),
+    new TextEncoder().encode(encodedPayload),
+  );
+  if (!verified) {
+    throw new Error("Assinatura da Meta inválida.");
+  }
+
+  const payload = JSON.parse(
+    new TextDecoder().decode(base64UrlToBytes(encodedPayload)),
+  ) as {
+    algorithm?: string;
+    user_id?: string | number;
+  };
+  if (
+    payload.algorithm?.toUpperCase() !== "HMAC-SHA256" ||
+    !payload.user_id
+  ) {
+    throw new Error("Solicitação da Meta incompleta.");
+  }
+  return { userId: String(payload.user_id) };
 }
