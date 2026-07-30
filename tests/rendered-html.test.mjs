@@ -60,3 +60,26 @@ test("keeps invitations opaque, expiring and single-use", async () => {
     /password|senha/i,
   );
 });
+
+test("keeps Instagram insights server-side, cached and resilient", async () => {
+  const [insightsRoute, insightsService, database] = await Promise.all([
+    readFile(
+      new URL(
+        "../app/api/internal/clients/[id]/instagram/insights/route.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    readFile(new URL("../lib/instagram-insights.ts", import.meta.url), "utf8"),
+    readFile(new URL("../db/runtime.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(insightsRoute, /requireServiceAuthorization/);
+  assert.match(insightsRoute, /decryptAccessToken/);
+  assert.match(insightsRoute, /INTERVAL '15 minutes'/);
+  assert.match(insightsService, /follower_demographics/);
+  assert.match(insightsService, /online_followers/);
+  assert.match(insightsService, /total_interactions/);
+  assert.match(database, /instagram_insights_cache/);
+  assert.doesNotMatch(insightsRoute, /Response\.json\(\{\s*accessToken/);
+});

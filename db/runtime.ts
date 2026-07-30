@@ -102,6 +102,15 @@ export async function getDatabase() {
           last_synced_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
       `);
+      await sqlClient!.query(`
+        CREATE TABLE IF NOT EXISTS instagram_insights_cache (
+          client_id TEXT NOT NULL,
+          period_days INTEGER NOT NULL,
+          payload_json TEXT NOT NULL,
+          fetched_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (client_id, period_days)
+        )
+      `);
       await sqlClient!.query(
         "CREATE INDEX IF NOT EXISTS invitations_client_status_idx ON invitations(client_id, status)",
       );
@@ -110,6 +119,9 @@ export async function getDatabase() {
       );
       await sqlClient!.query(
         "CREATE INDEX IF NOT EXISTS oauth_states_created_idx ON oauth_states(created_at)",
+      );
+      await sqlClient!.query(
+        "CREATE INDEX IF NOT EXISTS instagram_insights_cache_fetched_idx ON instagram_insights_cache(fetched_at)",
       );
       initialized = true;
     })();

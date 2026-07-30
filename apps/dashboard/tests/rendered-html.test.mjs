@@ -86,3 +86,29 @@ test("uses the private connector credential and rejects non-JSON failures", asyn
   assert.match(socialPanel, /readJsonResponse/);
   assert.doesNotMatch(socialPanel, /Unexpected token/);
 });
+
+test("protects Instagram analytics by client membership", async () => {
+  const [insightsProxy, insightsPanel, socialPanel] = await Promise.all([
+    readFile(
+      new URL(
+        "../app/api/clients/[id]/instagram/insights/route.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL("../app/instagram-insights-panel.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../app/social-media-panel.tsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(insightsProxy, /requireClientView/);
+  assert.match(insightsProxy, /AbortSignal\.timeout\(30_000\)/);
+  assert.match(insightsPanel, /Últimos 30 dias/);
+  assert.match(insightsPanel, /Melhores horários/);
+  assert.match(insightsPanel, /Quem acompanha o perfil/);
+  assert.match(insightsPanel, /Melhores publicações recentes/);
+  assert.match(socialPanel, /Instagram Insights/);
+  assert.doesNotMatch(insightsPanel, /access_token|META_APP_SECRET/);
+});

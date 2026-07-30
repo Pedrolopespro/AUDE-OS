@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { InstagramInsightsPanel } from "./instagram-insights-panel";
 
 type SocialPostStatus =
   | "draft"
@@ -498,6 +499,7 @@ export function SocialMediaPanel({
 }) {
   const canManage = mode === "manage";
   const [posts, setPosts] = useState<SocialPost[]>([]);
+  const [section, setSection] = useState<"calendar" | "insights">("calendar");
   const [month, setMonth] = useState(() => new Date());
   const [newPostDate, setNewPostDate] = useState<Date | null>(null);
   const [editingPost, setEditingPost] = useState<SocialPost | null>(null);
@@ -688,11 +690,17 @@ export function SocialMediaPanel({
           </span>
           <div>
             <span className="eyebrow">SOCIAL MEDIA</span>
-            <h2>Calendário editorial</h2>
-            <p>Planejamento e produção de conteúdo de {client.name}.</p>
+            <h2>
+              {section === "calendar" ? "Calendário editorial" : "Instagram Insights"}
+            </h2>
+            <p>
+              {section === "calendar"
+                ? `Planejamento e produção de conteúdo de ${client.name}.`
+                : `Desempenho, público e oportunidades de ${client.name}.`}
+            </p>
           </div>
         </div>
-        {canManage ? (
+        {canManage && section === "calendar" ? (
           <button className="primary-button" onClick={() => setNewPostDate(new Date())}>
             ＋ Criar conteúdo
           </button>
@@ -701,6 +709,38 @@ export function SocialMediaPanel({
         )}
       </div>
 
+      <div className="social-section-tabs" role="tablist" aria-label="Área de Social Media">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={section === "calendar"}
+          className={section === "calendar" ? "active" : ""}
+          onClick={() => setSection("calendar")}
+        >
+          <span aria-hidden="true">▦</span>
+          Calendário
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={section === "insights"}
+          className={section === "insights" ? "active" : ""}
+          onClick={() => setSection("insights")}
+          disabled={!instagram.connected}
+          title={
+            instagram.connected
+              ? "Ver desempenho do Instagram"
+              : "Conecte o Instagram para liberar as análises"
+          }
+        >
+          <span aria-hidden="true">↗</span>
+          Desempenho
+          {instagram.connected && <i>Ao vivo</i>}
+        </button>
+      </div>
+
+      {section === "calendar" && (
+        <>
       <div className="social-summary-grid">
         <article>
           <span>Conteúdos no mês</span>
@@ -944,6 +984,15 @@ export function SocialMediaPanel({
           </article>
         </aside>
       </div>
+        </>
+      )}
+
+      {section === "insights" && instagram.connected && (
+        <InstagramInsightsPanel
+          clientId={client.id}
+          instagram={instagram}
+        />
+      )}
 
       {canManage && newPostDate && (
         <NewPostModal
