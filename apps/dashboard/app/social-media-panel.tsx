@@ -700,12 +700,16 @@ export function SocialMediaPanel({
             </p>
           </div>
         </div>
-        {canManage && section === "calendar" ? (
-          <button className="primary-button" onClick={() => setNewPostDate(new Date())}>
-            ＋ Criar conteúdo
-          </button>
+        {section === "calendar" ? (
+          canManage ? (
+            <button className="primary-button" onClick={() => setNewPostDate(new Date())}>
+              ＋ Criar conteúdo
+            </button>
+          ) : (
+            <span className="read-only-pill">Somente leitura</span>
+          )
         ) : (
-          <span className="read-only-pill">Somente leitura</span>
+          <span className="read-only-pill">Dados oficiais da Meta</span>
         )}
       </div>
 
