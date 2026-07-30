@@ -45,7 +45,8 @@ Copie `.env.example` para `.env.local` durante o desenvolvimento:
 - `META_APP_SECRET`: segredo do aplicativo da Meta.
 - `TOKEN_ENCRYPTION_KEY`: chave de 32 bytes em Base64 para proteger tokens.
 - `CONNECTOR_SHARED_SECRET`: segredo compartilhado com o painel AUDE.
-- `AUDE_DASHBOARD_URL`: URL do painel interno.
+- `AUDE_DASHBOARD_URL`: URL do painel interno
+  (`https://painel.audeagencia.com.br`).
 - `APP_BASE_URL`: URL pública canônica (`https://os.audeagencia.com.br`).
 
 Gere os dois segredos internos com:

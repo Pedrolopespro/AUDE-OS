@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function Home() {
   const dashboardUrl =
     process.env.AUDE_DASHBOARD_URL?.trim() ||
-    "https://aude-gestao.lopeshpl.chatgpt.site";
+    "https://painel.audeagencia.com.br";
 
   return (
     <main className="entry-shell">

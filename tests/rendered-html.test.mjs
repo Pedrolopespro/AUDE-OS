@@ -14,6 +14,7 @@ test("keeps the public AUDE connection portal identifiable and secure", async ()
   assert.match(home, /Como você quer continuar/);
   assert.match(home, /Entrar no painel/);
   assert.match(home, /AUDE_DASHBOARD_URL/);
+  assert.match(home, /https:\/\/painel\.audeagencia\.com\.br/);
   assert.match(home, /A senha do Instagram nunca é compartilhada/);
   assert.match(connectPortal, /Sua senha permanece somente com o Instagram/);
   assert.doesNotMatch(
