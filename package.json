@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "test": "node --test tests/rendered-html.test.mjs",
-    "lint": "eslint . --ignore-pattern .next --ignore-pattern dist"
+    "lint": "eslint . --ignore-pattern .next --ignore-pattern dist --ignore-pattern apps"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

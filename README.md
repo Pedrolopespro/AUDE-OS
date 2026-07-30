@@ -1,4 +1,21 @@
-# AUDE OS · Conector do Instagram
+# AUDE OS
+
+Repositório principal do sistema operacional da AUDE.
+
+## Aplicações
+
+- **Conector público do Instagram (raiz):** aplicação Next.js publicada pela
+  Vercel em `https://os.audeagencia.com.br`. Recebe a autorização do cliente sem
+  que a agência precise conhecer ou armazenar sua senha.
+- **Painel de gestão (`apps/dashboard`):** painel interno com clientes,
+  comercial, financeiro, Social Media, calendário editorial, convites e
+  acompanhamento das conexões.
+
+O conector permanece na raiz para preservar a configuração atual da Vercel. O
+painel fica versionado como uma aplicação independente e mantém seu próprio
+processo de publicação.
+
+## Conector do Instagram
 
 Portal público usado pela AUDE para enviar convites individuais aos clientes e
 conectar contas profissionais do Instagram sem receber ou armazenar senhas.
