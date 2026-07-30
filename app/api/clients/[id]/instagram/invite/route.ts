@@ -1,5 +1,5 @@
 import { ensureDatabase } from "@/db/runtime";
-import { connectorRequest } from "@/lib/connector";
+import { connectorJson } from "@/lib/connector";
 import {
   accessErrorResponse,
   requireAppUser,
@@ -23,15 +23,18 @@ export async function POST(
       return Response.json({ error: "Cliente não encontrado." }, { status: 404 });
     }
 
-    const response = await connectorRequest("/api/internal/invitations", {
+    const { data, status } = await connectorJson<{
+      invitationUrl?: string;
+      expiresAt?: string;
+      error?: string;
+    }>("/api/internal/invitations", {
       method: "POST",
       body: JSON.stringify({
         clientId: client.id,
         clientName: client.name,
       }),
     });
-    const data = await response.json();
-    return Response.json(data, { status: response.status });
+    return Response.json(data, { status });
   } catch (error) {
     return accessErrorResponse(error, "Não foi possível gerar o convite.");
   }

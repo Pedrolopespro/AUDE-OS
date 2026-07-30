@@ -29,6 +29,17 @@ type ClientIdentity = {
   color: string;
 };
 
+async function readJsonResponse<T>(response: Response): Promise<T> {
+  const body = await response.text();
+  try {
+    return JSON.parse(body) as T;
+  } catch {
+    throw new Error(
+      "O serviço está temporariamente indisponível. Tente novamente em alguns segundos.",
+    );
+  }
+}
+
 type InstagramConnection =
   | {
       connected: false;
@@ -350,7 +361,11 @@ function InstagramSetup({
       signal: controller.signal,
     })
       .then(async (response) => {
-        const data = await response.json();
+        const data = await readJsonResponse<{
+          error?: string;
+          invitationUrl: string;
+          expiresAt: string;
+        }>(response);
         if (!response.ok) throw new Error(data.error);
         setInvitationUrl(data.invitationUrl);
         setExpiresAt(data.expiresAt);

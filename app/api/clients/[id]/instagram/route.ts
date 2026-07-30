@@ -1,4 +1,4 @@
-import { connectorRequest } from "@/lib/connector";
+import { connectorJson } from "@/lib/connector";
 import {
   accessErrorResponse,
   requireAppUser,
@@ -16,12 +16,11 @@ async function proxy(
     const currentUser = await requireAppUser(request);
     if (method === "GET") requireClientView(currentUser, id);
     else requireContentManagement(currentUser, id);
-    const response = await connectorRequest(
+    const { data, status } = await connectorJson<Record<string, unknown>>(
       `/api/internal/clients/${encodeURIComponent(id)}/instagram`,
       { method },
     );
-    const data = await response.json();
-    return Response.json(data, { status: response.status });
+    return Response.json(data, { status });
   } catch (error) {
     const response = accessErrorResponse(
       error,

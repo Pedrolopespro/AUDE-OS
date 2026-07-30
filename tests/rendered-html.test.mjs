@@ -69,3 +69,20 @@ test("stores only hashed, single-use invitation tokens", async () => {
   assert.match(migration, /access_invitations/);
   assert.match(migration, /client_memberships_user_client_unique/);
 });
+
+test("uses the private connector credential and rejects non-JSON failures", async () => {
+  const connector = await readFile(
+    new URL("../lib/connector.ts", import.meta.url),
+    "utf8",
+  );
+  const socialPanel = await readFile(
+    new URL("../app/social-media-panel.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(connector, /OAI-Sites-Authorization/);
+  assert.match(connector, /AbortSignal\.timeout\(8_000\)/);
+  assert.match(connector, /JSON\.parse\(body\)/);
+  assert.match(socialPanel, /readJsonResponse/);
+  assert.doesNotMatch(socialPanel, /Unexpected token/);
+});
