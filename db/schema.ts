@@ -1,5 +1,10 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 export const clients = sqliteTable("clients", {
   id: text("id").primaryKey(),
@@ -74,4 +79,52 @@ export const metaOauthStates = sqliteTable("meta_oauth_states", {
     .notNull()
     .references(() => clients.id, { onDelete: "cascade" }),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const appUsers = sqliteTable("app_users", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  role: text("role").notNull().default("client"),
+  status: text("status").notNull().default("active"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  lastSeenAt: text("last_seen_at"),
+});
+
+export const clientMemberships = sqliteTable(
+  "client_memberships",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => appUsers.id, { onDelete: "cascade" }),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("client_memberships_user_client_unique").on(
+      table.userId,
+      table.clientId,
+    ),
+  ],
+);
+
+export const accessInvitations = sqliteTable("access_invitations", {
+  id: text("id").primaryKey(),
+  tokenHash: text("token_hash").notNull().unique(),
+  email: text("email").notNull(),
+  name: text("name").notNull(),
+  role: text("role").notNull(),
+  clientId: text("client_id").references(() => clients.id, {
+    onDelete: "cascade",
+  }),
+  status: text("status").notNull().default("pending"),
+  expiresAt: text("expires_at").notNull(),
+  invitedBy: text("invited_by").references(() => appUsers.id, {
+    onDelete: "set null",
+  }),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  acceptedAt: text("accepted_at"),
 });

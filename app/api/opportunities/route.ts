@@ -1,4 +1,9 @@
 import { ensureDatabase } from "../../../db/runtime";
+import {
+  accessErrorResponse,
+  requireAppUser,
+  requireClientManagement,
+} from "@/lib/access";
 
 const allowedStages = new Set([
   "prospect",
@@ -11,6 +16,8 @@ const allowedMeetingStatuses = new Set(["scheduled", "held", "cancelled"]);
 
 export async function POST(request: Request) {
   try {
+    const currentUser = await requireAppUser(request);
+    requireClientManagement(currentUser);
     const payload = (await request.json()) as {
       company?: string;
       contact?: string;
@@ -70,11 +77,6 @@ export async function POST(request: Request) {
 
     return Response.json({ opportunity }, { status: 201 });
   } catch (error) {
-    return Response.json(
-      {
-        error: error instanceof Error ? error.message : "Não foi possível cadastrar a oportunidade.",
-      },
-      { status: 500 },
-    );
+    return accessErrorResponse(error, "Não foi possível cadastrar a oportunidade.");
   }
 }

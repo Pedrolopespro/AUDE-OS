@@ -1,7 +1,14 @@
 import { ensureDatabase } from "../../../db/runtime";
+import {
+  accessErrorResponse,
+  requireAppUser,
+  requireClientManagement,
+} from "@/lib/access";
 
 export async function PUT(request: Request) {
   try {
+    const currentUser = await requireAppUser(request);
+    requireClientManagement(currentUser);
     const payload = (await request.json()) as {
       prospecting?: number | null;
       meetings?: number | null;
@@ -43,11 +50,6 @@ export async function PUT(request: Request) {
 
     return Response.json({ ok: true });
   } catch (error) {
-    return Response.json(
-      {
-        error: error instanceof Error ? error.message : "Não foi possível salvar as metas.",
-      },
-      { status: 500 },
-    );
+    return accessErrorResponse(error, "Não foi possível salvar as metas.");
   }
 }

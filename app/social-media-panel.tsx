@@ -475,10 +475,13 @@ function InstagramSetup({
 export function SocialMediaPanel({
   client,
   onBack,
+  mode,
 }: {
   client: ClientIdentity;
   onBack: () => void;
+  mode: "manage" | "view";
 }) {
+  const canManage = mode === "manage";
   const [posts, setPosts] = useState<SocialPost[]>([]);
   const [month, setMonth] = useState(() => new Date());
   const [newPostDate, setNewPostDate] = useState<Date | null>(null);
@@ -674,9 +677,13 @@ export function SocialMediaPanel({
             <p>Planejamento e produção de conteúdo de {client.name}.</p>
           </div>
         </div>
-        <button className="primary-button" onClick={() => setNewPostDate(new Date())}>
-          ＋ Criar conteúdo
-        </button>
+        {canManage ? (
+          <button className="primary-button" onClick={() => setNewPostDate(new Date())}>
+            ＋ Criar conteúdo
+          </button>
+        ) : (
+          <span className="read-only-pill">Somente leitura</span>
+        )}
       </div>
 
       <div className="social-summary-grid">
@@ -707,7 +714,11 @@ export function SocialMediaPanel({
           <div className="calendar-toolbar">
             <div>
               <h3>{monthLabel(month)}</h3>
-              <span>Clique em um dia para planejar um conteúdo</span>
+              <span>
+                {canManage
+                  ? "Clique em um dia para planejar um conteúdo"
+                  : "Acompanhe o planejamento e o andamento dos conteúdos"}
+              </span>
             </div>
             <div className="calendar-actions">
               <button onClick={() => setMonth(new Date())}>Hoje</button>
@@ -727,7 +738,9 @@ export function SocialMediaPanel({
                 <button
                   className={`calendar-day${outside ? " outside" : ""}${today ? " today" : ""}`}
                   key={key}
-                  onClick={() => setNewPostDate(day)}
+                  onClick={() => {
+                    if (canManage) setNewPostDate(day);
+                  }}
                 >
                   <span className="day-number">{day.getDate()}</span>
                   <span className="day-posts">
@@ -737,7 +750,7 @@ export function SocialMediaPanel({
                         key={post.id}
                         onClick={(event) => {
                           event.stopPropagation();
-                          setEditingPost(post);
+                          if (canManage) setEditingPost(post);
                         }}
                       >
                         <b>{new Date(post.scheduledAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</b>
@@ -811,37 +824,43 @@ export function SocialMediaPanel({
                   })}
                   .
                 </p>
-                <div className="instagram-actions">
-                  <button
-                    className="secondary-button"
-                    onClick={syncInstagram}
-                    disabled={syncingInstagram}
-                  >
-                    {syncingInstagram ? "Atualizando..." : "Atualizar dados"}
-                  </button>
-                  <button
-                    className="instagram-disconnect"
-                    onClick={disconnectInstagram}
-                  >
-                    Desconectar
-                  </button>
-                </div>
+                {canManage && (
+                  <div className="instagram-actions">
+                    <button
+                      className="secondary-button"
+                      onClick={syncInstagram}
+                      disabled={syncingInstagram}
+                    >
+                      {syncingInstagram ? "Atualizando..." : "Atualizar dados"}
+                    </button>
+                    <button
+                      className="instagram-disconnect"
+                      onClick={disconnectInstagram}
+                    >
+                      Desconectar
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <>
                 <p>
                   {instagram.invitationPending
                     ? "Convite enviado. Aguardando autorização do cliente."
-                    : "Envie um link seguro para o cliente autorizar a conta."}
+                    : canManage
+                      ? "Envie um link seguro para o cliente autorizar a conta."
+                      : "A conexão do Instagram é gerenciada pela equipe AUDE."}
                 </p>
-                <button
-                  className="secondary-button"
-                  onClick={() => setShowInstagramSetup(true)}
-                >
-                  {instagram.invitationPending
-                    ? "Gerar novo convite"
-                    : "Solicitar conexão"}
-                </button>
+                {canManage && (
+                  <button
+                    className="secondary-button"
+                    onClick={() => setShowInstagramSetup(true)}
+                  >
+                    {instagram.invitationPending
+                      ? "Gerar novo convite"
+                      : "Solicitar conexão"}
+                  </button>
+                )}
               </>
             )}
           </article>
@@ -849,7 +868,9 @@ export function SocialMediaPanel({
           <article className="panel production-list">
             <div className="production-head">
               <div><h3>Fluxo de produção</h3><span>{monthPosts.length} conteúdos</span></div>
-              <button onClick={() => setNewPostDate(new Date())}>＋</button>
+              {canManage && (
+                <button onClick={() => setNewPostDate(new Date())}>＋</button>
+              )}
             </div>
             <div className="production-items">
               {monthPosts
@@ -862,24 +883,34 @@ export function SocialMediaPanel({
                       <span>{new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(new Date(post.scheduledAt)).replace(".", "")}</span>
                     </div>
                     <div className="production-copy">
-                      <button
-                        className="production-open"
-                        onClick={() => setEditingPost(post)}
-                      >
-                        {post.title}
-                      </button>
+                      {canManage ? (
+                        <button
+                          className="production-open"
+                          onClick={() => setEditingPost(post)}
+                        >
+                          {post.title}
+                        </button>
+                      ) : (
+                        <strong className="production-title">{post.title}</strong>
+                      )}
                       <span>{formatLabels[post.format]} · {post.channels.join(", ")}</span>
-                      <select
-                        value={post.status}
-                        aria-label={`Etapa de ${post.title}`}
-                        onChange={(event) =>
-                          updateStatus(post, event.target.value as SocialPostStatus)
-                        }
-                      >
-                        {Object.entries(statusLabels).map(([value, label]) => (
-                          <option key={value} value={value}>{label}</option>
-                        ))}
-                      </select>
+                      {canManage ? (
+                        <select
+                          value={post.status}
+                          aria-label={`Etapa de ${post.title}`}
+                          onChange={(event) =>
+                            updateStatus(post, event.target.value as SocialPostStatus)
+                          }
+                        >
+                          {Object.entries(statusLabels).map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className={`production-status ${post.status}`}>
+                          {statusLabels[post.status]}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -887,7 +918,11 @@ export function SocialMediaPanel({
                 <div className="production-empty">
                   <span>＋</span>
                   <strong>Calendário livre</strong>
-                  <p>Crie o primeiro conteúdo deste cliente.</p>
+                  <p>
+                    {canManage
+                      ? "Crie o primeiro conteúdo deste cliente."
+                      : "Nenhum conteúdo planejado neste mês."}
+                  </p>
                 </div>
               )}
             </div>
@@ -895,14 +930,14 @@ export function SocialMediaPanel({
         </aside>
       </div>
 
-      {newPostDate && (
+      {canManage && newPostDate && (
         <NewPostModal
           initialDate={newPostDate}
           close={() => setNewPostDate(null)}
           save={createPost}
         />
       )}
-      {editingPost && (
+      {canManage && editingPost && (
         <NewPostModal
           initialDate={new Date(editingPost.scheduledAt)}
           initialPost={editingPost}
@@ -911,7 +946,7 @@ export function SocialMediaPanel({
           remove={() => deletePost(editingPost)}
         />
       )}
-      {showInstagramSetup && (
+      {canManage && showInstagramSetup && (
         <InstagramSetup
           clientId={client.id}
           clientName={client.name}

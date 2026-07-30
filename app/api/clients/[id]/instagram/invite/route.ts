@@ -1,12 +1,19 @@
 import { ensureDatabase } from "@/db/runtime";
 import { connectorRequest } from "@/lib/connector";
+import {
+  accessErrorResponse,
+  requireAppUser,
+  requireContentManagement,
+} from "@/lib/access";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await context.params;
+    const currentUser = await requireAppUser(request);
+    requireContentManagement(currentUser, id);
     const db = await ensureDatabase();
     const client = await db
       .prepare("SELECT id, name FROM clients WHERE id = ? LIMIT 1")
@@ -26,14 +33,6 @@ export async function POST(
     const data = await response.json();
     return Response.json(data, { status: response.status });
   } catch (error) {
-    return Response.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Não foi possível gerar o convite.",
-      },
-      { status: 500 },
-    );
+    return accessErrorResponse(error, "Não foi possível gerar o convite.");
   }
 }

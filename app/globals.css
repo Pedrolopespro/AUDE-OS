@@ -159,7 +159,7 @@ button {
   background: linear-gradient(145deg, #2c3b75, #506bea);
 }
 
-.profile > div:last-child {
+.profile-copy {
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -173,6 +173,20 @@ button {
   margin-top: 3px;
   color: var(--muted);
   font-size: 9px;
+}
+
+.profile-signout {
+  margin-left: auto;
+  border-radius: 7px;
+  padding: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.profile-signout:hover {
+  color: var(--blue);
+  background: #eef1ff;
 }
 
 .main-content {
@@ -1035,7 +1049,7 @@ button {
 }
 
 .settings-page {
-  max-width: 760px;
+  max-width: 1120px;
 }
 
 .goals-form {
@@ -1684,6 +1698,413 @@ button {
   background: #f2f4f8;
 }
 
+.production-title {
+  color: var(--ink);
+}
+
+.production-status {
+  align-self: flex-start;
+  margin-top: 6px;
+  border-radius: 6px;
+  padding: 5px 7px;
+  color: #667086;
+  font-size: 7px;
+  font-weight: 750;
+  background: #f2f4f8;
+}
+
+.production-status.published {
+  color: #137451;
+  background: #e9f8f1;
+}
+
+.production-status.approved,
+.production-status.scheduled {
+  color: #3d55c2;
+  background: #eef1ff;
+}
+
+.read-only-pill,
+.secure-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 0 12px;
+  color: #536075;
+  font-size: 9px;
+  font-weight: 750;
+  background: #eef1f7;
+}
+
+.dashboard-loading {
+  min-height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.dashboard-loading div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashboard-loading strong {
+  font-size: 13px;
+}
+
+.dashboard-loading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.access-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(72, 102, 237, 0.12), transparent 30%),
+    #f5f7fb;
+}
+
+.access-card {
+  width: min(100%, 500px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 38px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(24, 38, 82, 0.12);
+}
+
+.access-card h1 {
+  margin: 14px 0 10px;
+  font-size: 26px;
+  letter-spacing: -0.035em;
+}
+
+.access-card > p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.access-card > .secondary-button,
+.access-card > .primary-button {
+  width: 100%;
+  margin-top: 14px;
+  text-decoration: none;
+}
+
+.access-help {
+  border-radius: 10px;
+  padding: 11px 13px;
+  background: #f4f6fb;
+}
+
+.invite-accept-card {
+  width: min(100%, 560px);
+}
+
+.invite-summary {
+  display: grid;
+  gap: 8px;
+  margin: 22px 0;
+}
+
+.invite-summary div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #f6f7fa;
+}
+
+.invite-summary dt {
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.invite-summary dd {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.access-management {
+  margin-top: 42px;
+  padding-top: 34px;
+  border-top: 1px solid var(--line);
+}
+
+.access-heading {
+  align-items: center;
+}
+
+.access-invite-form {
+  margin-bottom: 18px;
+  padding: 22px;
+}
+
+.access-form-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.access-form-head h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.access-form-head p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.secure-pill {
+  color: #137451;
+  background: #e9f8f1;
+}
+
+.access-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.access-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #697287;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.access-form-grid input,
+.access-form-grid select,
+.generated-access-link input {
+  min-width: 0;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 0 11px;
+  color: var(--ink);
+  background: #fbfcfe;
+}
+
+.access-form-grid input:focus,
+.access-form-grid select:focus,
+.generated-access-link input:focus {
+  border-color: var(--blue);
+  outline: 0;
+  box-shadow: 0 0 0 3px #eef1ff;
+}
+
+.generated-access-link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  border: 1px solid #cfeadb;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f3fbf7;
+}
+
+.generated-access-link > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.generated-access-link strong {
+  font-size: 10px;
+}
+
+.generated-access-link span {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.access-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.access-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: 16px;
+}
+
+.access-list-panel,
+.pending-invites-panel {
+  overflow: hidden;
+}
+
+.access-user-list,
+.pending-invite-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.access-user-row {
+  display: grid;
+  grid-template-columns: 36px minmax(120px, 1fr) auto minmax(110px, 0.8fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 66px;
+  padding: 10px 18px;
+  border-top: 1px solid #f0f2f6;
+}
+
+.access-user-row:first-child,
+.pending-invite-row:first-child {
+  border-top: 0;
+}
+
+.access-avatar {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  background: #243c7a;
+}
+
+.access-user-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.access-user-main strong {
+  overflow: hidden;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.access-user-main small,
+.access-scope {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-pill {
+  border-radius: 999px;
+  padding: 6px 8px;
+  color: #536075;
+  font-size: 7px;
+  font-weight: 750;
+  background: #eef1f7;
+  white-space: nowrap;
+}
+
+.role-pill.role-admin {
+  color: #6f4191;
+  background: #f5ecfb;
+}
+
+.role-pill.role-manager {
+  color: #3d55c2;
+  background: #eef1ff;
+}
+
+.role-pill.role-collaborator {
+  color: #8c5d12;
+  background: #fcf6e9;
+}
+
+.role-pill.role-client {
+  color: #137451;
+  background: #e9f8f1;
+}
+
+.pending-invite-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 70px;
+  padding: 12px 18px;
+  border-top: 1px solid #f0f2f6;
+}
+
+.pending-invite-row > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pending-invite-row strong {
+  font-size: 10px;
+}
+
+.pending-invite-row span,
+.pending-invite-row small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pending-invite-row button {
+  border: 0;
+  padding: 7px;
+  color: #a33c3c;
+  font-size: 8px;
+  font-weight: 700;
+  background: transparent;
+  cursor: pointer;
+}
+
+.compact-empty {
+  min-height: 150px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  color: #137451;
+}
+
+.compact-empty span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e9f8f1;
+}
+
+.compact-empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+}
+
 .production-empty {
   min-height: 170px;
   display: flex;
@@ -1921,6 +2342,10 @@ button {
   .pipeline {
     grid-template-columns: repeat(4, minmax(235px, 1fr));
   }
+
+  .access-columns {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 700px) {
@@ -2071,5 +2496,41 @@ button {
 
   .goals-actions {
     grid-column: auto;
+  }
+
+  .access-heading,
+  .access-form-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .access-form-grid,
+  .generated-access-link {
+    grid-template-columns: 1fr;
+  }
+
+  .generated-access-link .secondary-button,
+  .access-heading .primary-button {
+    width: 100%;
+  }
+
+  .access-user-row {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+  }
+
+  .access-scope {
+    grid-column: 2 / -1;
+  }
+
+  .access-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .access-form-actions button {
+    width: 100%;
+  }
+
+  .access-card {
+    padding: 28px 22px;
   }
 }

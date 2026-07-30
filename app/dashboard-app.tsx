@@ -1,7 +1,9 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { AccessManagement } from "./access-management";
 import { SocialMediaPanel } from "./social-media-panel";
+import type { AppUser } from "@/lib/access";
 
 type PaymentStatus = "confirm" | "paid" | "overdue";
 type ContractType = "fixed" | "percentage";
@@ -40,49 +42,6 @@ type Goals = {
 
 type Page = "overview" | "commercial" | "clients" | "finance" | "settings";
 
-const seedClients: Client[] = [
-  {
-    id: "lima-ferreira",
-    name: "Lima Ferreira Advogados",
-    initials: "LF",
-    services: ["Social media", "Tráfego", "Site"],
-    contractType: "fixed",
-    value: 1300,
-    paymentStatus: "confirm",
-    color: "#102d61",
-  },
-  {
-    id: "kmon",
-    name: "KMON",
-    initials: "KM",
-    services: ["Social media", "Tráfego", "Site"],
-    contractType: "fixed",
-    value: 1500,
-    paymentStatus: "confirm",
-    color: "#0f766e",
-  },
-  {
-    id: "projeto-endorfina",
-    name: "Projeto Endorfina",
-    initials: "EN",
-    services: ["Social media", "Tráfego", "Site", "Sistemas", "Lançamento"],
-    contractType: "percentage",
-    value: 20,
-    paymentStatus: "confirm",
-    color: "#5a7b19",
-  },
-  {
-    id: "ires-trafego",
-    name: "Ires Tráfego",
-    initials: "IR",
-    services: ["Site", "Lançamento"],
-    contractType: "percentage",
-    value: 20,
-    paymentStatus: "confirm",
-    color: "#7c3aed",
-  },
-];
-
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
@@ -104,16 +63,43 @@ function BrandMark() {
 function Sidebar({
   page,
   setPage,
+  currentUser,
 }: {
   page: Page;
   setPage: (page: Page) => void;
+  currentUser: AppUser;
 }) {
-  const items: { id: Page; label: string; icon: string }[] = [
+  const agencyLeader =
+    currentUser.role === "admin" || currentUser.role === "manager";
+  const allItems: { id: Page; label: string; icon: string }[] = [
     { id: "overview", label: "Visão geral", icon: "⌂" },
     { id: "commercial", label: "Comercial", icon: "↗" },
-    { id: "clients", label: "Clientes", icon: "◇" },
+    {
+      id: "clients",
+      label: currentUser.role === "client" ? "Minha empresa" : "Clientes",
+      icon: "◇",
+    },
     { id: "finance", label: "Financeiro", icon: "$" },
   ];
+  const items = allItems.filter((item) => {
+    if (currentUser.role === "client") return item.id === "clients";
+    if (currentUser.role === "collaborator") {
+      return item.id === "overview" || item.id === "clients";
+    }
+    return agencyLeader;
+  });
+  const initials = currentUser.name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+  const roleLabels = {
+    admin: "Administrador",
+    manager: "Gestor",
+    collaborator: "Colaborador",
+    client: "Cliente",
+  };
 
   return (
     <aside className="sidebar">
@@ -136,17 +122,30 @@ function Sidebar({
         ))}
       </nav>
 
-      <button
-        className={page === "settings" ? "nav-item settings active" : "nav-item settings"}
-        onClick={() => setPage("settings")}
-      >
-        <span className="nav-icon" aria-hidden="true">⚙</span>
-        Configurações
-      </button>
+      {currentUser.role === "admin" && (
+        <button
+          className={page === "settings" ? "nav-item settings active" : "nav-item settings"}
+          onClick={() => setPage("settings")}
+        >
+          <span className="nav-icon" aria-hidden="true">⚙</span>
+          Configurações
+        </button>
+      )}
 
       <div className="profile">
-        <div className="avatar">PL</div>
-        <div><strong>Pedro Lopes</strong><span>Administrador</span></div>
+        <div className="avatar">{initials}</div>
+        <div className="profile-copy">
+          <strong>{currentUser.name}</strong>
+          <span>{roleLabels[currentUser.role]}</span>
+        </div>
+        <a
+          className="profile-signout"
+          href="/signout-with-chatgpt?return_to=/"
+          aria-label="Sair do painel"
+          title="Sair do painel"
+        >
+          ↗
+        </a>
       </div>
     </aside>
   );
@@ -155,9 +154,11 @@ function Sidebar({
 function Topbar({
   title,
   onNewClient,
+  canCreateClient,
 }: {
   title: string;
   onNewClient: () => void;
+  canCreateClient: boolean;
 }) {
   return (
     <header className="topbar">
@@ -167,9 +168,11 @@ function Topbar({
       </div>
       <div className="top-actions">
         <span className="save-state"><i />Dados salvos</span>
-        <button className="primary-button" onClick={onNewClient}>
-          <span aria-hidden="true">＋</span>Novo cliente
-        </button>
+        {canCreateClient && (
+          <button className="primary-button" onClick={onNewClient}>
+            <span aria-hidden="true">＋</span>Novo cliente
+          </button>
+        )}
       </div>
     </header>
   );
@@ -205,6 +208,7 @@ function Overview({
   openClient,
   goTo,
   addOpportunity,
+  currentUser,
 }: {
   clients: Client[];
   opportunities: Opportunity[];
@@ -212,6 +216,7 @@ function Overview({
   openClient: (client: Client) => void;
   goTo: (page: Page) => void;
   addOpportunity: () => void;
+  currentUser: AppUser;
 }) {
   const fixedRevenue = clients
     .filter((client) => client.contractType === "fixed")
@@ -226,7 +231,7 @@ function Overview({
     <>
       <section className="welcome-row">
         <div>
-          <h2>Boa tarde, Pedro.</h2>
+          <h2>Boa tarde, {currentUser.name.split(/\s+/)[0]}.</h2>
           <p>A operação da AUDE em uma visão simples e direta.</p>
         </div>
         <div className="period-pill">Julho de 2026⌄</div>
@@ -348,11 +353,13 @@ function ClientDetail({
   onBack,
   updatePayment,
   openService,
+  canManageClient,
 }: {
   client: Client;
   onBack: () => void;
   updatePayment: (id: string, status: PaymentStatus) => void;
   openService: (service: string) => void;
+  canManageClient: boolean;
 }) {
   return (
     <section className="client-detail">
@@ -364,20 +371,22 @@ function ClientDetail({
           <h2>{client.name}</h2>
           <p>{client.services.join(" · ")}</p>
         </div>
-        <div className="hero-contract">
-          <span>Contrato</span>
-          <strong>{client.contractType === "fixed" ? `${money.format(client.value)}/mês` : `${client.value}% de comissão`}</strong>
-          <select
-            aria-label={`Status financeiro de ${client.name}`}
-            value={client.paymentStatus}
-            onChange={(event) => updatePayment(client.id, event.target.value as PaymentStatus)}
-            className={`payment-select ${client.paymentStatus}`}
-          >
-            <option value="confirm">A confirmar</option>
-            <option value="paid">Pago</option>
-            <option value="overdue">Em atraso</option>
-          </select>
-        </div>
+        {canManageClient && (
+          <div className="hero-contract">
+            <span>Contrato</span>
+            <strong>{client.contractType === "fixed" ? `${money.format(client.value)}/mês` : `${client.value}% de comissão`}</strong>
+            <select
+              aria-label={`Status financeiro de ${client.name}`}
+              value={client.paymentStatus}
+              onChange={(event) => updatePayment(client.id, event.target.value as PaymentStatus)}
+              className={`payment-select ${client.paymentStatus}`}
+            >
+              <option value="confirm">A confirmar</option>
+              <option value="paid">Pago</option>
+              <option value="overdue">Em atraso</option>
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="client-dashboard">
@@ -542,9 +551,11 @@ function FinancePage({
 function SettingsPage({
   goals,
   saveGoals,
+  clients,
 }: {
   goals: Goals;
   saveGoals: (goals: Goals) => Promise<void>;
+  clients: Client[];
 }) {
   const [draft, setDraft] = useState({
     prospecting: goals.prospecting?.toString() ?? "",
@@ -578,6 +589,7 @@ function SettingsPage({
           <button className="primary-button" type="submit">Salvar metas</button>
         </div>
       </form>
+      <AccessManagement clients={clients} />
     </section>
   );
 }
@@ -756,11 +768,17 @@ function NewOpportunityModal({
   );
 }
 
-export function DashboardApp() {
-  const [page, setPage] = useState<Page>("overview");
-  const [clients, setClients] = useState<Client[]>(seedClients);
+export function DashboardApp({ currentUser }: { currentUser: AppUser }) {
+  const agencyLeader =
+    currentUser.role === "admin" || currentUser.role === "manager";
+  const canManageContent = currentUser.role !== "client";
+  const [page, setPage] = useState<Page>(
+    currentUser.role === "client" ? "clients" : "overview",
+  );
+  const [clients, setClients] = useState<Client[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [goals, setGoals] = useState<Goals>({ prospecting: null, meetings: null, closedClients: null });
+  const [loading, setLoading] = useState(true);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [showNewClient, setShowNewClient] = useState(false);
@@ -775,8 +793,9 @@ export function DashboardApp() {
         if (data.goals) setGoals(data.goals);
       })
       .catch(() => {
-        // The real client data remains visible if the first network request is interrupted.
-      });
+        // Protected data never falls back to shared fixture content.
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -798,13 +817,14 @@ export function DashboardApp() {
     }
     if (selectedClient) return selectedClient.name;
     return {
-      overview: "Visão geral",
+      overview:
+        currentUser.role === "client" ? "Meu painel" : "Visão geral",
       commercial: "Comercial",
       clients: "Clientes",
       finance: "Financeiro",
       settings: "Configurações",
     }[page];
-  }, [page, selectedClient, selectedService]);
+  }, [currentUser.role, page, selectedClient, selectedService]);
 
   const changePage = (next: Page) => {
     setSelectedClientId(null);
@@ -856,14 +876,24 @@ export function DashboardApp() {
 
   return (
     <div className="app-shell">
-      <Sidebar page={page} setPage={changePage} />
+      <Sidebar page={page} setPage={changePage} currentUser={currentUser} />
       <main className="main-content">
-        <Topbar title={title} onNewClient={() => setShowNewClient(true)} />
+        <Topbar
+          title={title}
+          onNewClient={() => setShowNewClient(true)}
+          canCreateClient={agencyLeader}
+        />
         <div className="content">
-          {selectedClient && selectedService === "Social media" ? (
+          {loading ? (
+            <section className="panel dashboard-loading" aria-live="polite">
+              <span className="brand-mark">A</span>
+              <div><strong>Carregando seu painel</strong><p>Aplicando seus acessos...</p></div>
+            </section>
+          ) : selectedClient && selectedService === "Social media" ? (
             <SocialMediaPanel
               client={selectedClient}
               onBack={() => setSelectedService(null)}
+              mode={canManageContent ? "manage" : "view"}
             />
           ) : selectedClient ? (
             <ClientDetail
@@ -871,27 +901,28 @@ export function DashboardApp() {
               onBack={() => setSelectedClientId(null)}
               updatePayment={updatePayment}
               openService={openService}
+              canManageClient={agencyLeader}
             />
-          ) : page === "overview" ? (
-            <Overview clients={clients} opportunities={opportunities} goals={goals} openClient={openClient} goTo={changePage} addOpportunity={() => setShowNewOpportunity(true)} />
-          ) : page === "clients" ? (
+          ) : page === "overview" && agencyLeader ? (
+            <Overview clients={clients} opportunities={opportunities} goals={goals} openClient={openClient} goTo={changePage} addOpportunity={() => setShowNewOpportunity(true)} currentUser={currentUser} />
+          ) : page === "overview" || page === "clients" ? (
             <ClientsPage clients={clients} openClient={openClient} />
           ) : page === "commercial" ? (
             <CommercialPage opportunities={opportunities} onNew={() => setShowNewOpportunity(true)} updateOpportunity={updateOpportunity} />
           ) : page === "finance" ? (
             <FinancePage clients={clients} updatePayment={updatePayment} />
           ) : (
-            <SettingsPage goals={goals} saveGoals={saveGoals} />
+            <SettingsPage goals={goals} saveGoals={saveGoals} clients={clients} />
           )}
         </div>
       </main>
-      {showNewClient && (
+      {showNewClient && agencyLeader && (
         <NewClientModal
           close={() => setShowNewClient(false)}
           onSaved={(client) => setClients((current) => [...current, client])}
         />
       )}
-      {showNewOpportunity && (
+      {showNewOpportunity && agencyLeader && (
         <NewOpportunityModal
           close={() => setShowNewOpportunity(false)}
           onSaved={(opportunity) => setOpportunities((current) => [opportunity, ...current])}

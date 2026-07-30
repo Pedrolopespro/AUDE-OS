@@ -1,4 +1,9 @@
 import { ensureDatabase } from "../../../../db/runtime";
+import {
+  accessErrorResponse,
+  requireAppUser,
+  requireClientManagement,
+} from "@/lib/access";
 
 const paymentStatuses = new Set(["confirm", "paid", "overdue"]);
 
@@ -7,6 +12,8 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const currentUser = await requireAppUser(request);
+    requireClientManagement(currentUser);
     const { id } = await context.params;
     const payload = (await request.json()) as { paymentStatus?: string };
 
@@ -22,11 +29,6 @@ export async function PATCH(
 
     return Response.json({ ok: true });
   } catch (error) {
-    return Response.json(
-      {
-        error: error instanceof Error ? error.message : "Não foi possível atualizar o cliente.",
-      },
-      { status: 500 },
-    );
+    return accessErrorResponse(error, "Não foi possível atualizar o cliente.");
   }
 }

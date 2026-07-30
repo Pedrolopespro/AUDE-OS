@@ -1,11 +1,21 @@
 import { connectorRequest } from "@/lib/connector";
+import {
+  accessErrorResponse,
+  requireAppUser,
+  requireClientView,
+  requireContentManagement,
+} from "@/lib/access";
 
 async function proxy(
   method: "GET" | "POST" | "DELETE",
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await context.params;
+    const currentUser = await requireAppUser(request);
+    if (method === "GET") requireClientView(currentUser, id);
+    else requireContentManagement(currentUser, id);
     const response = await connectorRequest(
       `/api/internal/clients/${encodeURIComponent(id)}/instagram`,
       { method },
@@ -13,35 +23,36 @@ async function proxy(
     const data = await response.json();
     return Response.json(data, { status: response.status });
   } catch (error) {
-    return Response.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "O portal de conexão não respondeu.",
-      },
-      { status: 502 },
+    const response = accessErrorResponse(
+      error,
+      "O portal de conexão não respondeu.",
     );
+    return response.status === 500
+      ? Response.json(
+          { error: "O portal de conexão não respondeu." },
+          { status: 502 },
+        )
+      : response;
   }
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  return proxy("GET", context);
+  return proxy("GET", request, context);
 }
 
 export async function POST(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  return proxy("POST", context);
+  return proxy("POST", request, context);
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  return proxy("DELETE", context);
+  return proxy("DELETE", request, context);
 }

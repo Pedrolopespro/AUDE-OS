@@ -1,4 +1,9 @@
 import { ensureDatabase } from "@/db/runtime";
+import {
+  accessErrorResponse,
+  requireAppUser,
+  requireContentManagement,
+} from "@/lib/access";
 
 const statuses = new Set([
   "draft",
@@ -39,6 +44,8 @@ export async function PATCH(
 ) {
   try {
     const { id, postId } = await context.params;
+    const currentUser = await requireAppUser(request);
+    requireContentManagement(currentUser, id);
     const payload = (await request.json()) as {
       title?: string;
       caption?: string;
@@ -120,24 +127,18 @@ export async function PATCH(
 
     return Response.json({ ok: true, post: updated ? mapPost(updated) : null });
   } catch (error) {
-    return Response.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Não foi possível atualizar o conteúdo.",
-      },
-      { status: 500 },
-    );
+    return accessErrorResponse(error, "Não foi possível atualizar o conteúdo.");
   }
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string; postId: string }> },
 ) {
   try {
     const { id, postId } = await context.params;
+    const currentUser = await requireAppUser(request);
+    requireContentManagement(currentUser, id);
     const db = await ensureDatabase();
     const result = await db
       .prepare("DELETE FROM social_posts WHERE id = ? AND client_id = ?")
@@ -150,14 +151,6 @@ export async function DELETE(
 
     return Response.json({ ok: true });
   } catch (error) {
-    return Response.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Não foi possível excluir o conteúdo.",
-      },
-      { status: 500 },
-    );
+    return accessErrorResponse(error, "Não foi possível excluir o conteúdo.");
   }
 }

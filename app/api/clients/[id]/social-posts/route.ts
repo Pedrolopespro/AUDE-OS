@@ -1,4 +1,10 @@
 import { ensureDatabase } from "@/db/runtime";
+import {
+  accessErrorResponse,
+  requireAppUser,
+  requireClientView,
+  requireContentManagement,
+} from "@/lib/access";
 
 const statuses = new Set([
   "draft",
@@ -34,11 +40,13 @@ function mapPost(row: PostRow) {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await context.params;
+    const currentUser = await requireAppUser(request);
+    requireClientView(currentUser, id);
     const db = await ensureDatabase();
     const result = await db
       .prepare(`
@@ -52,15 +60,7 @@ export async function GET(
 
     return Response.json({ posts: (result.results ?? []).map(mapPost) });
   } catch (error) {
-    return Response.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Não foi possível carregar o calendário.",
-      },
-      { status: 500 },
-    );
+    return accessErrorResponse(error, "Não foi possível carregar o calendário.");
   }
 }
 
@@ -70,6 +70,8 @@ export async function POST(
 ) {
   try {
     const { id: clientId } = await context.params;
+    const currentUser = await requireAppUser(request);
+    requireContentManagement(currentUser, clientId);
     const payload = (await request.json()) as {
       title?: string;
       caption?: string;
@@ -139,14 +141,6 @@ export async function POST(
 
     return Response.json({ post }, { status: 201 });
   } catch (error) {
-    return Response.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Não foi possível criar o conteúdo.",
-      },
-      { status: 500 },
-    );
+    return accessErrorResponse(error, "Não foi possível criar o conteúdo.");
   }
 }

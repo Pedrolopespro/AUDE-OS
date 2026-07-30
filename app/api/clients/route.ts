@@ -1,4 +1,9 @@
 import { ensureDatabase } from "../../../db/runtime";
+import {
+  accessErrorResponse,
+  requireAppUser,
+  requireClientManagement,
+} from "@/lib/access";
 
 const allowedServices = new Set([
   "Social media",
@@ -31,6 +36,8 @@ function initials(name: string) {
 
 export async function POST(request: Request) {
   try {
+    const currentUser = await requireAppUser(request);
+    requireClientManagement(currentUser);
     const payload = (await request.json()) as {
       name?: string;
       services?: string[];
@@ -96,11 +103,6 @@ export async function POST(request: Request) {
 
     return Response.json({ client }, { status: 201 });
   } catch (error) {
-    return Response.json(
-      {
-        error: error instanceof Error ? error.message : "Não foi possível cadastrar o cliente.",
-      },
-      { status: 500 },
-    );
+    return accessErrorResponse(error, "Não foi possível cadastrar o cliente.");
   }
 }
