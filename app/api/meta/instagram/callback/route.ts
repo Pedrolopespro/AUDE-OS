@@ -1,6 +1,7 @@
 import { getDatabase } from "@/db/runtime";
 import {
   oauthCallbackUrl,
+  publicUrl,
   requireMetaConfiguration,
 } from "@/lib/config";
 import { encryptAccessToken } from "@/lib/crypto";
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
         SELECT s.invitation_id, i.client_id, i.client_name, i.status, i.expires_at
         FROM oauth_states s
         JOIN invitations i ON i.id = s.invitation_id
-        WHERE s.state = ? AND s.created_at >= datetime('now', '-20 minutes')
+        WHERE s.state = ? AND s.created_at >= CURRENT_TIMESTAMP - INTERVAL '20 minutes'
       `)
       .bind(state)
       .first<{
@@ -163,12 +164,12 @@ export async function GET(request: Request) {
         .bind(stateRow.invitation_id),
     ]);
 
-    const success = new URL("/success", request.url);
+    const success = new URL(publicUrl("/success", request));
     success.searchParams.set("client", stateRow.client_name);
     success.searchParams.set("username", profile.username);
     return Response.redirect(success, 302);
   } catch (error) {
-    const failure = new URL("/error", request.url);
+    const failure = new URL(publicUrl("/error", request));
     failure.searchParams.set(
       "reason",
       error instanceof Error ? error.message : "unknown",

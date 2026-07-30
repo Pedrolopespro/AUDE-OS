@@ -3,7 +3,7 @@ import {
   createInvitationToken,
   hashInvitationToken,
 } from "@/lib/crypto";
-import { requireServiceAuthorization } from "@/lib/config";
+import { publicUrl, requireServiceAuthorization } from "@/lib/config";
 
 export async function POST(request: Request) {
   try {
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         .bind(invitationId, tokenHash, clientId, clientName, expiresAt),
     ]);
 
-    const invitationUrl = new URL("/connect", request.url);
+    const invitationUrl = new URL(publicUrl("/connect", request));
     invitationUrl.searchParams.set("token", rawToken);
     return Response.json({
       invitationUrl: invitationUrl.toString(),

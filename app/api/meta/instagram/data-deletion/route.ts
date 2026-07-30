@@ -1,5 +1,5 @@
 import { getDatabase } from "@/db/runtime";
-import { requireMetaConfiguration } from "@/lib/config";
+import { publicUrl, requireMetaConfiguration } from "@/lib/config";
 import { verifyMetaSignedRequest } from "@/lib/crypto";
 
 export async function POST(request: Request) {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       .bind(userId)
       .run();
 
-    const statusUrl = new URL("/data-deletion", request.url);
+    const statusUrl = new URL(publicUrl("/data-deletion", request));
     statusUrl.searchParams.set("confirmation_code", confirmationCode);
     return Response.json({
       url: statusUrl.toString(),

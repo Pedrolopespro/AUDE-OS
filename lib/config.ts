@@ -1,9 +1,11 @@
 type ConnectorEnvironment = {
+  DATABASE_URL?: string;
   META_APP_ID?: string;
   META_APP_SECRET?: string;
   TOKEN_ENCRYPTION_KEY?: string;
   CONNECTOR_SHARED_SECRET?: string;
   AUDE_DASHBOARD_URL?: string;
+  APP_BASE_URL?: string;
 };
 
 export const instagramScopes = [
@@ -12,13 +14,12 @@ export const instagramScopes = [
   "instagram_business_manage_insights",
 ];
 
-export async function connectorEnvironment() {
-  const { env } = await import("cloudflare:workers");
-  return env as unknown as ConnectorEnvironment;
+export function connectorEnvironment(): ConnectorEnvironment {
+  return process.env as ConnectorEnvironment;
 }
 
-export async function requireMetaConfiguration() {
-  const environment = await connectorEnvironment();
+export function requireMetaConfiguration() {
+  const environment = connectorEnvironment();
   if (
     !environment.META_APP_ID ||
     !environment.META_APP_SECRET ||
@@ -33,8 +34,8 @@ export async function requireMetaConfiguration() {
   };
 }
 
-export async function requireServiceAuthorization(request: Request) {
-  const { CONNECTOR_SHARED_SECRET } = await connectorEnvironment();
+export function requireServiceAuthorization(request: Request) {
+  const { CONNECTOR_SHARED_SECRET } = connectorEnvironment();
   const authorization = request.headers.get("authorization");
   if (
     !CONNECTOR_SHARED_SECRET ||
@@ -45,5 +46,10 @@ export async function requireServiceAuthorization(request: Request) {
 }
 
 export function oauthCallbackUrl(request: Request) {
-  return new URL("/api/meta/instagram/callback", request.url).toString();
+  return publicUrl("/api/meta/instagram/callback", request);
+}
+
+export function publicUrl(path: string, request: Request) {
+  const configuredBase = connectorEnvironment().APP_BASE_URL?.trim();
+  return new URL(path, configuredBase || request.url).toString();
 }

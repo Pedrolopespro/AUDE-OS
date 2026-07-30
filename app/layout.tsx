@@ -13,9 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    "https://aude-conectar-instagram.lopeshpl.chatgpt.site",
-  ),
+  metadataBase: new URL("https://os.audeagencia.com.br"),
   title: "AUDE Conectar",
   description: "Portal seguro de autorização da AUDE Gestão.",
   openGraph: {

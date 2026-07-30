@@ -2,6 +2,7 @@ import { getDatabase } from "@/db/runtime";
 import {
   instagramScopes,
   oauthCallbackUrl,
+  publicUrl,
   requireMetaConfiguration,
 } from "@/lib/config";
 import {
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
   const rawToken = requestUrl.searchParams.get("token") ?? "";
   const invitation = await findInvitation(rawToken);
   if (!invitation || invitationAvailability(invitation) !== "pending") {
-    return Response.redirect(new URL("/error?reason=invite", request.url), 302);
+    return Response.redirect(publicUrl("/error?reason=invite", request), 302);
   }
 
   try {
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
     const db = await getDatabase();
     await db.batch([
       db.prepare(
-        "DELETE FROM oauth_states WHERE created_at < datetime('now', '-20 minutes')",
+        "DELETE FROM oauth_states WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '20 minutes'",
       ),
       db
         .prepare(
@@ -41,6 +42,6 @@ export async function GET(request: Request) {
     authorization.searchParams.set("force_reauth", "true");
     return Response.redirect(authorization, 302);
   } catch {
-    return Response.redirect(new URL("/error?reason=config", request.url), 302);
+    return Response.redirect(publicUrl("/error?reason=config", request), 302);
   }
 }
