@@ -3,11 +3,18 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 test("keeps the public AUDE connection portal identifiable and secure", async () => {
-  const [home, layout, connectPortal] = await Promise.all([
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/connect/connect-portal.tsx", import.meta.url), "utf8"),
-  ]);
+  const [home, layout, connectPortal, privacy, terms, dataDeletion] =
+    await Promise.all([
+      readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+      readFile(
+        new URL("../app/connect/connect-portal.tsx", import.meta.url),
+        "utf8",
+      ),
+      readFile(new URL("../app/privacy/page.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../app/terms/page.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../app/data-deletion/page.tsx", import.meta.url), "utf8"),
+    ]);
 
   assert.match(layout, /lang="pt-BR"/i);
   assert.match(layout, /https:\/\/os\.audeagencia\.com\.br/);
@@ -17,8 +24,11 @@ test("keeps the public AUDE connection portal identifiable and secure", async ()
   assert.match(home, /https:\/\/painel\.audeagencia\.com\.br/);
   assert.match(home, /A senha do Instagram nunca é compartilhada/);
   assert.match(connectPortal, /Sua senha permanece somente com o Instagram/);
+  assert.match(privacy, /POLÍTICA DE PRIVACIDADE/);
+  assert.match(terms, /TERMOS DE USO/);
+  assert.match(dataDeletion, /EXCLUSÃO DE DADOS/);
   assert.doesNotMatch(
-    [home, layout, connectPortal].join("\n"),
+    [home, layout, connectPortal, privacy, terms, dataDeletion].join("\n"),
     /META_APP_SECRET|TOKEN_ENCRYPTION_KEY/,
   );
 });
