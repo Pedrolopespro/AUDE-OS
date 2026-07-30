@@ -6,17 +6,11 @@ import {
   requireClientManagement,
   requireClientView,
 } from "@/lib/access";
+import { googleAdsCredentialsConfigured } from "@/lib/google-ads";
 
 export const runtime = "edge";
 
 const MCC_SETTING_KEY = "google_ads_mcc_customer_id";
-
-type GoogleAdsEnvironment = {
-  GOOGLE_ADS_DEVELOPER_TOKEN?: string;
-  GOOGLE_ADS_OAUTH_CLIENT_ID?: string;
-  GOOGLE_ADS_OAUTH_CLIENT_SECRET?: string;
-  GOOGLE_ADS_OAUTH_REFRESH_TOKEN?: string;
-};
 
 function normalizeCustomerId(value: unknown) {
   return String(value ?? "").replace(/\D/g, "");
@@ -24,21 +18,6 @@ function normalizeCustomerId(value: unknown) {
 
 function isValidCustomerId(value: string) {
   return /^\d{10}$/.test(value);
-}
-
-async function hasGoogleAdsCredentials() {
-  try {
-    const { env } = await import("cloudflare:workers");
-    const googleEnv = env as unknown as GoogleAdsEnvironment;
-    return Boolean(
-      googleEnv.GOOGLE_ADS_DEVELOPER_TOKEN &&
-        googleEnv.GOOGLE_ADS_OAUTH_CLIENT_ID &&
-        googleEnv.GOOGLE_ADS_OAUTH_CLIENT_SECRET &&
-        googleEnv.GOOGLE_ADS_OAUTH_REFRESH_TOKEN,
-    );
-  } catch {
-    return false;
-  }
 }
 
 async function readPpcConfiguration(clientId: string) {
@@ -76,7 +55,7 @@ async function readPpcConfiguration(clientId: string) {
         lastSyncedAt: string | null;
         updatedAt: string;
       }>(),
-    hasGoogleAdsCredentials(),
+    googleAdsCredentialsConfigured(),
   ]);
 
   return {

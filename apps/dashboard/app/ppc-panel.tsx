@@ -30,6 +30,47 @@ type PpcConfiguration = {
   readyToSync: boolean;
 };
 
+type PpcCampaign = {
+  id: string;
+  name: string;
+  status: string;
+  cost: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  conversionValue: number;
+  cpa: number | null;
+  roas: number | null;
+};
+
+type PpcPerformance = {
+  connected: true;
+  mode: "read_only";
+  accountName: string;
+  currencyCode: string;
+  timeZone: string;
+  range: { start: string; end: string };
+  summary: {
+    cost: number;
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    conversionValue: number;
+    cpa: number | null;
+    roas: number | null;
+  };
+  daily: {
+    date: string;
+    cost: number;
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    conversionValue: number;
+  }[];
+  campaigns: PpcCampaign[];
+  syncedAt: string;
+};
+
 type PpcPanelProps = {
   client: ClientIdentity;
   onBack: () => void;
@@ -302,6 +343,92 @@ const futureSources = [
   },
 ];
 
+const statusLabels: Record<string, string> = {
+  ENABLED: "Ativa",
+  PAUSED: "Pausada",
+  REMOVED: "Removida",
+  UNKNOWN: "Indefinido",
+  UNSPECIFIED: "Indefinido",
+};
+
+function PerformanceChart({
+  performance,
+  clientName,
+}: {
+  performance: PpcPerformance | null;
+  clientName: string;
+}) {
+  if (!performance?.daily.length) {
+    return (
+      <div className="ppc-chart-empty">
+        <div className="ppc-chart-lines" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+          <i />
+        </div>
+        <span>↗</span>
+        <strong>Aguardando a primeira sincronização</strong>
+        <p>
+          O gráfico será preenchido apenas com dados reais da conta Google Ads
+          vinculada a {clientName}.
+        </p>
+      </div>
+    );
+  }
+
+  const maxCost = Math.max(...performance.daily.map((day) => day.cost), 1);
+  const points = performance.daily.map((day, index) => {
+    const x =
+      performance.daily.length === 1
+        ? 500
+        : 24 + (index / (performance.daily.length - 1)) * 952;
+    const y = 182 - (day.cost / maxCost) * 145;
+    return { x, y, ...day };
+  });
+  const polyline = points.map((point) => `${point.x},${point.y}`).join(" ");
+  const area = `24,182 ${polyline} 976,182`;
+
+  return (
+    <div className="ppc-chart-live">
+      <svg
+        viewBox="0 0 1000 205"
+        role="img"
+        aria-label="Evolução diária do investimento no Google Ads"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id="ppc-chart-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#4866ed" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#4866ed" stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+        {[37, 85, 133, 182].map((y) => (
+          <line key={y} x1="24" x2="976" y1={y} y2={y} />
+        ))}
+        <polygon points={area} fill="url(#ppc-chart-fill)" />
+        <polyline points={polyline} className="ppc-cost-line" />
+        {points.map((point) => (
+          <circle key={point.date} cx={point.x} cy={point.y} r="4">
+            <title>
+              {point.date}: {point.cost.toFixed(2)} de investimento e{" "}
+              {point.conversions.toFixed(1)} conversões
+            </title>
+          </circle>
+        ))}
+      </svg>
+      <div className="ppc-chart-axis">
+        <span>{performance.range.start.split("-").reverse().slice(0, 2).join("/")}</span>
+        <span>{performance.range.end.split("-").reverse().slice(0, 2).join("/")}</span>
+      </div>
+      <div className="ppc-chart-legend">
+        <span><i />Investimento diário</span>
+        <span>Período no fuso {performance.timeZone}</span>
+      </div>
+    </div>
+  );
+}
+
 export function PpcPanel({
   client,
   onBack,
@@ -313,6 +440,10 @@ export function PpcPanel({
   const [error, setError] = useState("");
   const [showSetup, setShowSetup] = useState(false);
   const [period, setPeriod] = useState("30");
+  const [performance, setPerformance] = useState<PpcPerformance | null>(null);
+  const [performanceLoading, setPerformanceLoading] = useState(false);
+  const [performanceError, setPerformanceError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -341,9 +472,63 @@ export function PpcPanel({
     };
   }, [client.id]);
 
+  useEffect(() => {
+    if (!configuration.readyToSync) return;
+    let active = true;
+    Promise.resolve()
+      .then(() => {
+        if (active) {
+          setPerformanceLoading(true);
+          setPerformanceError("");
+        }
+        return fetch(
+          `/api/clients/${client.id}/ppc/performance?days=${period}`,
+        );
+      })
+      .then(async (response) => {
+        const data = await readJson<PpcPerformance & { error?: string }>(
+          response,
+        );
+        if (!response.ok) {
+          throw new Error(data.error ?? "Não foi possível consultar os dados.");
+        }
+        if (active) setPerformance(data);
+      })
+      .catch((caught) => {
+        if (active) {
+          setPerformanceError(
+            caught instanceof Error
+              ? caught.message
+              : "Não foi possível consultar a performance.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setPerformanceLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [client.id, configuration.readyToSync, period, refreshKey]);
+
   const configured = Boolean(
     configuration.managerCustomerId && configuration.account,
   );
+  const number = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+  const currency = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: performance?.currencyCode ?? "BRL",
+    maximumFractionDigits: 2,
+  });
+  const summary = performance?.summary;
+  const metricValues = [
+    ["Investimento", summary ? currency.format(summary.cost) : "R$ —", "Total aplicado"],
+    ["Impressões", summary ? number.format(summary.impressions) : "—", "Anúncios exibidos"],
+    ["Cliques", summary ? number.format(summary.clicks) : "—", "Interações com anúncios"],
+    ["Conversões", summary ? number.format(summary.conversions) : "—", "Resultados atribuídos"],
+    ["CPA", summary?.cpa != null ? currency.format(summary.cpa) : "R$ —", "Custo por aquisição"],
+    ["ROAS", summary?.roas != null ? `${number.format(summary.roas)}×` : "—", "Retorno sobre investimento"],
+  ];
 
   return (
     <section className="ppc-page">
@@ -436,25 +621,29 @@ export function PpcPanel({
               <span className="eyebrow">PERFORMANCE</span>
               <h3>Resumo da conta</h3>
             </div>
-            <label>
-              Período
-              <select value={period} onChange={(event) => setPeriod(event.target.value)}>
-                <option value="7">Últimos 7 dias</option>
-                <option value="30">Últimos 30 dias</option>
-                <option value="90">Últimos 90 dias</option>
-              </select>
-            </label>
+            <div className="ppc-toolbar-actions">
+              {configuration.readyToSync && (
+                <button
+                  type="button"
+                  onClick={() => setRefreshKey((current) => current + 1)}
+                  disabled={performanceLoading}
+                >
+                  {performanceLoading ? "Atualizando..." : "↻ Atualizar dados"}
+                </button>
+              )}
+              <label>
+                Período
+                <select value={period} onChange={(event) => setPeriod(event.target.value)}>
+                  <option value="7">Últimos 7 dias</option>
+                  <option value="30">Últimos 30 dias</option>
+                  <option value="90">Últimos 90 dias</option>
+                </select>
+              </label>
+            </div>
           </div>
 
           <section className="ppc-metrics" aria-label="Principais indicadores">
-            {[
-              ["Investimento", "R$ —", "Total aplicado"],
-              ["Impressões", "—", "Anúncios exibidos"],
-              ["Cliques", "—", "Interações com anúncios"],
-              ["Conversões", "—", "Resultados atribuídos"],
-              ["CPA", "R$ —", "Custo por aquisição"],
-              ["ROAS", "—", "Retorno sobre investimento"],
-            ].map(([label, value, meta]) => (
+            {metricValues.map(([label, value, meta]) => (
               <article key={label}>
                 <span>{label}</span>
                 <strong>{value}</strong>
@@ -470,22 +659,14 @@ export function PpcPanel({
                   <h3>Investimento × conversões</h3>
                   <p>Evolução diária no período selecionado.</p>
                 </div>
-                <span>Dados da API</span>
+                <span>
+                  {performanceLoading ? "Sincronizando" : "Dados da API"}
+                </span>
               </div>
-              <div className="ppc-chart-empty">
-                <div className="ppc-chart-lines" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </div>
-                <span>↗</span>
-                <strong>Aguardando a primeira sincronização</strong>
-                <p>
-                  O gráfico será preenchido apenas com dados reais da conta
-                  Google Ads vinculada a {client.name}.
-                </p>
-              </div>
+              {performanceError && (
+                <p className="ppc-performance-error">{performanceError}</p>
+              )}
+              <PerformanceChart performance={performance} clientName={client.name} />
             </article>
 
             <article className="panel ppc-assistant-card">
@@ -524,13 +705,40 @@ export function PpcPanel({
                 <span>CPA</span>
                 <span>ROAS</span>
               </div>
-              <div className="ppc-table-empty">
-                <GoogleAdsMark />
-                <strong>Nenhuma campanha importada</strong>
-                <span>
-                  As campanhas aparecerão aqui depois da conexão com a API.
-                </span>
-              </div>
+              {performance?.campaigns.length ? (
+                performance.campaigns.map((campaign) => (
+                  <div className="ppc-table-row" key={campaign.id}>
+                    <span>
+                      <strong>{campaign.name}</strong>
+                      <small>{campaign.id}</small>
+                    </span>
+                    <span>
+                      <i className={campaign.status.toLowerCase()} />
+                      {statusLabels[campaign.status] ?? campaign.status}
+                    </span>
+                    <strong>{currency.format(campaign.cost)}</strong>
+                    <span>{number.format(campaign.impressions)}</span>
+                    <span>{number.format(campaign.clicks)}</span>
+                    <span>{number.format(campaign.conversions)}</span>
+                    <span>
+                      {campaign.cpa == null ? "—" : currency.format(campaign.cpa)}
+                    </span>
+                    <span>
+                      {campaign.roas == null
+                        ? "—"
+                        : `${number.format(campaign.roas)}×`}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="ppc-table-empty">
+                  <GoogleAdsMark />
+                  <strong>Nenhuma campanha importada</strong>
+                  <span>
+                    As campanhas aparecerão aqui depois da conexão com a API.
+                  </span>
+                </div>
+              )}
             </div>
           </article>
 
